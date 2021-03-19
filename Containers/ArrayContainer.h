@@ -16,6 +16,7 @@
 
 /** Libraries **/
 #include <cstddef>
+#include <cstring>
 
 /** Special definitions **/
 #if __cplusplus >= 201703l	// If the C++ version is greater or equal to 2017xx
@@ -29,8 +30,9 @@ template<class T, size_t SIZE>
 class Array{
 public:
 	/*** Constructors and Destructors ***/
-	Array() noexcept = default;			// Default constructor
-	Array(const T& fillValue) noexcept;	// Fill constructor
+	Array() noexcept = default;				// Default constructor
+	Array(const T& fillValue) noexcept;		// Fill constructor
+    Array(const Array& copyArr) noexcept;  	// Copy constructor
 
 	~Array() = default;
 
@@ -64,6 +66,17 @@ Array<T, SIZE>::Array(const T& fillValue) noexcept
 {
 	for(T& element : data)
 		element = fillValue;
+}
+
+/**
+ * @brief	Copy constructor copies elements from another array.
+ * @param 	copyArr	Source array.
+ * @note	Copying is done via a standard library function to provide special optimizations.
+ */
+template<class T, size_t SIZE>
+Array<T, SIZE>::Array(const Array<T, SIZE>& copyArr) noexcept
+{
+	memcpy(data, copyArr.data, sizeof(T) * SIZE);
 }
 
 #endif // Recursive inclusion preventer
