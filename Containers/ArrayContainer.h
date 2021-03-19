@@ -15,8 +15,8 @@
 #define ARRAY_CONTAINER_H
 
 /** Libraries **/
-#include <cstddef>
-#include <cstring>
+#include <cstddef>	// For size_t
+#include <cstring>	// For memcpy
 
 /** Special definitions **/
 #if __cplusplus >= 201703l	// If the C++ version is greater or equal to 2017xx
@@ -30,9 +30,10 @@ template<class T, size_t SIZE>
 class Array{
 public:
 	/*** Constructors and Destructors ***/
-	Array() noexcept = default;				// Default constructor
-	Array(const T& fillValue) noexcept;		// Fill constructor
-    Array(const Array& copyArr) noexcept;  	// Copy constructor
+	Array() noexcept = default;							// Default constructor
+	Array(const T& fillValue) noexcept;					// Fill constructor
+	Array(const Array& copyArr) noexcept;  				// Copy constructor
+    Array(const T* const source, const size_t size);    // Construct with C-Style array
 
 	~Array() = default;
 
@@ -77,6 +78,19 @@ template<class T, size_t SIZE>
 Array<T, SIZE>::Array(const Array<T, SIZE>& copyArr) noexcept
 {
 	memcpy(data, copyArr.data, sizeof(T) * SIZE);
+}
+
+/**
+ * @brief	Construct the container with the given C-Style array.
+ * @param 	source		Source buffer
+ * @param 	sourceSize	Number of elements in the source
+ * @note	In case of an inequality between size values, the lower one is chosen.
+ */
+template<class T, size_t SIZE>
+Array<T, SIZE>::Array(const T* const source, const size_t sourceSize)
+{
+	if(source != nullptr)
+		memcpy(data, source, sizeof(T) * ((sourceSize < SIZE) ? sourceSize : SIZE));
 }
 
 #endif // Recursive inclusion preventer
