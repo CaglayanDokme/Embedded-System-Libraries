@@ -93,6 +93,8 @@ static void CopyInitListHelper(T* destData, const std::initializer_list<_T>initL
 /*** Container Class ***/
 template<class T, std::size_t SIZE>
 class Array{
+	static_assert(SIZE != 0, "Array size cannot be zero!");
+
 public:
 	/*** Constructors and Destructors ***/
 	Array() noexcept = default;											// Default constructor
@@ -119,8 +121,8 @@ public:
 	NODISCARD const_iterator cend() const		{ return data + SIZE; 	}
 
 	/*** Operators ***/
-	NODISCARD const T& operator[](const std::size_t index) const { return data[index]; }	// Subscript for non-assignable reference
-	NODISCARD T& operator[](const std::size_t index) 			{ return data[index]; }	// Subscript for assignable reference
+	NODISCARD const T& operator[](const std::size_t index) const 	{ return data[index]; }	// Subscript for non-assignable reference
+	NODISCARD T& operator[](const std::size_t index) 				{ return data[index]; }	// Subscript for assignable reference
 
 	template<class _T>	// Compare any kind of arrays
 	NODISCARD bool operator==(const Array<_T, SIZE>& rightArr) const noexcept;
