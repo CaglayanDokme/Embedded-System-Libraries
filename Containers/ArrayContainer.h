@@ -15,8 +15,9 @@
 #define ARRAY_CONTAINER_H
 
 /** Libraries **/
-#include <cstddef>	// For size_t
-#include <cstring>	// For memcpy
+#include <cstddef>			// For size_t
+#include <cstring>			// For memcpy
+#include <initializer_list>	// For initializer_list constructor
 
 /** Special definitions **/
 #if __cplusplus >= 201703l	// If the C++ version is greater or equal to 2017xx
@@ -32,8 +33,9 @@ public:
 	/*** Constructors and Destructors ***/
 	Array() noexcept = default;							// Default constructor
 	Array(const T& fillValue) noexcept;					// Fill constructor
-	Array(const Array& copyArr) noexcept;  				// Copy constructor
-    Array(const T* const source, const size_t size);    // Construct with C-Style array
+	Array(const Array& copyArr) noexcept;				// Copy constructor
+	Array(const T* const source, const size_t size);	// Construct with C-Style array
+	Array(std::initializer_list<T> initializerList);	// Initializer_list constructor
 
 	~Array() = default;
 
@@ -51,11 +53,11 @@ public:
 	NODISCARD T& operator[](const size_t index) 			{ return data[index]; }
 
 	/*** Status Checkers ***/
-	NODISCARD constexpr size_t getSize() { return size; }
+	NODISCARD constexpr size_t getSize() 	{ return SIZE;				}	// Returns total number of elements
+	NODISCARD constexpr size_t getSizeRaw() { return SIZE * sizeof(T);	}	// Return actual size in bytes
 
 private:
 	T data[SIZE];
-	const size_t size = SIZE;
 };
 
 /**
@@ -93,4 +95,15 @@ Array<T, SIZE>::Array(const T* const source, const size_t sourceSize)
 		memcpy(data, source, sizeof(T) * ((sourceSize < SIZE) ? sourceSize : SIZE));
 }
 
+/**
+ * @brief Constructs the array with brace-enclosed initializer list.
+ * @param initializerList	Source list
+ */
+template<class T, size_t SIZE>
+Array<T, SIZE>::Array(std::initializer_list<T> initializerList)
+{
+	size_t index = 0;
+	for(const T& element : initializerList)
+		data[index++] = element;
+}
 #endif // Recursive inclusion preventer
