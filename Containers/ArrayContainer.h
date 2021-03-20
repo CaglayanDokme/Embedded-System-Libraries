@@ -4,7 +4,9 @@
  *              This container is designed for embedded devices with limited resources.
  *              Dynamic allocation is not preferred to prevent fragmentation and some other performance related problems.
  *  @author     Caglayan DOKME, caglayandokme@gmail.com
- *  @date       March 19, 2021 -> First release
+ *  @date       March 19, 2021 	-> First release
+ *  			March 20, 2021 	-> Comparison operators overloaded.
+ *  							-> Initializer list constructor added.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -49,12 +51,15 @@ public:
 	NODISCARD const_iterator cend() const		{ return data + SIZE; 	}
 
 	/*** Operators ***/
-	NODISCARD const T& operator[](const size_t index) const { return data[index]; }
-	NODISCARD T& operator[](const size_t index) 			{ return data[index]; }
+	NODISCARD const T& operator[](const size_t index) const { return data[index]; }	// Subscript for non-assignable reference
+	NODISCARD T& operator[](const size_t index) 			{ return data[index]; }	// Subscript for assignable reference
+
+	NODISCARD bool operator==(const Array& rightArr) const noexcept;           // Array comparison
+	NODISCARD bool operator!=(const Array& rightArr) const noexcept;           // Array comparison by inequality
 
 	/*** Status Checkers ***/
-	NODISCARD constexpr size_t getSize() 	{ return SIZE;				}	// Returns total number of elements
-	NODISCARD constexpr size_t getSizeRaw() { return SIZE * sizeof(T);	}	// Return actual size in bytes
+	NODISCARD constexpr size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
+	NODISCARD constexpr size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
 
 private:
 	T data[SIZE];
@@ -106,4 +111,37 @@ Array<T, SIZE>::Array(std::initializer_list<T> initializerList)
 	for(const T& element : initializerList)
 		data[index++] = element;
 }
+
+/**
+ * @brief	Comparison operator compares two arrays
+ * @param 	rightArr	Array to be compared with
+ * @return	true 		If the elements are equal
+ * @note	Comparing arrays of different types and size is restricted.
+ * 			A compile time error will occur.
+ */
+template<class T, size_t SIZE>
+NODISCARD bool Array<T, SIZE>::operator==(const Array& rightArr) const noexcept
+{
+	if(this == &rightArr)	// Self comparison
+		return true;
+
+	if(this->getSize() != rightArr.getSize())
+		return false;		// Unequal sized arrays cannot be equal
+
+	return (0 == std::memcmp(this->data, rightArr.data, this->getSizeRaw()));
+}
+
+/**
+ * @brief	In-comparison operator compares two arrays
+ * @param 	rightArr	Array to be compared with
+ * @return	true 		If the elements are not equal
+ * @note	Comparing arrays of different types and size is restricted.
+ * 			A compile time error will occur.
+ */
+template<class T, size_t SIZE>
+NODISCARD bool Array<T, SIZE>::operator!=(const Array& rightArr) const noexcept
+{
+	return !(this->operator==(rightArr));
+}
+
 #endif // Recursive inclusion preventer
