@@ -52,6 +52,19 @@ static bool CompareHelper(const T* leftData, const _T* rightData, const std::siz
 	return true;
 }
 
+/**
+ * @brief	Fills the given data array with given values
+ * @param 	data		Destination resource area
+ * @param 	size		Range of fill
+ * @param 	fillValue	Reference value
+ */
+template<class T>
+static void FillHelper(T* data, const std::size_t size, const T& fillValue)
+{
+	for(size_t index = 0; index < size; ++index)
+		data[index] = fillValue;
+}
+
 /*** Container Class ***/
 template<class T, std::size_t SIZE>
 class Array{
@@ -98,8 +111,7 @@ private:
 template<class T, std::size_t SIZE>
 Array<T, SIZE>::Array(const T& fillValue) noexcept
 {
-	for(T& element : data)
-		element = fillValue;
+	FillHelper(data, SIZE, fillValue);
 }
 
 /**
