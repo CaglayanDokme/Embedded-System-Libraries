@@ -18,7 +18,7 @@
 
 /** Libraries **/
 #include <cstddef>			// For std::size_t
-#include <cstring>			// For memcpy
+#include <cstring>			// For memcpy, memcmp
 #include <initializer_list>	// For initializer_list constructor
 
 /** Special definitions **/
@@ -56,6 +56,11 @@ public:
 
 	NODISCARD bool operator==(const Array& rightArr) const noexcept;           // Array comparison
 	NODISCARD bool operator!=(const Array& rightArr) const noexcept;           // Array comparison by inequality
+
+	template<class _T>
+	NODISCARD bool operator==(const Array<_T, SIZE>& rightArr) const noexcept;           // Array of different types comparison
+	template<class _T>
+	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;           // Array of different types comparison by inequality
 
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
@@ -125,9 +130,6 @@ NODISCARD bool Array<T, SIZE>::operator==(const Array& rightArr) const noexcept
 	if(this == &rightArr)	// Self comparison
 		return true;
 
-	if(this->getSize() != rightArr.getSize())
-		return false;		// Unequal sized arrays cannot be equal
-
 	return (0 == std::memcmp(this->data, rightArr.data, this->getSizeRaw()));
 }
 
@@ -140,6 +142,37 @@ NODISCARD bool Array<T, SIZE>::operator==(const Array& rightArr) const noexcept
  */
 template<class T, std::size_t SIZE>
 NODISCARD bool Array<T, SIZE>::operator!=(const Array& rightArr) const noexcept
+{
+	return !(this->operator==(rightArr));
+}
+
+/**
+ * @brief	Comparison operator compares two arrays of different types
+ * @param 	rightArr	Array of another type to be compared with
+ * @return	true 		If the elements are equal
+ * @note	Comparing arrays of different size is restricted.
+ * 			A compile time error will occur.
+ */
+template<class T, std::size_t SIZE>
+template<class _T>
+NODISCARD bool Array<T, SIZE>::operator==(const Array<_T, SIZE>& rightArr) const noexcept
+{
+	if(getSize() != rightArr.getSize())
+		return false;
+
+	/* Comparing with std::memcmp is not eligible because of that
+	 * although the size of individual elements might not be
+	 * equal(e.g. double(8) and int(4)), their values can be equal. */
+	for(std::size_t index = 0; index < getSize(); ++index)
+		if(data[index] != rightArr[index])
+			return false;
+
+	return true;
+}
+
+template<class T, std::size_t SIZE>
+template<class _T>
+NODISCARD bool Array<T, SIZE>::operator!=(const Array<_T, SIZE>& rightArr) const noexcept
 {
 	return !(this->operator==(rightArr));
 }
