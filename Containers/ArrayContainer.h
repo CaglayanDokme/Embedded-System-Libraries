@@ -17,7 +17,7 @@
 #define ARRAY_CONTAINER_H
 
 /** Libraries **/
-#include <cstddef>			// For std::size_t
+#include <cstddef>			// For size_t
 #include <cstring>			// For memcpy, memcmp
 #include <initializer_list>	// For initializer_list constructor
 
@@ -28,16 +28,40 @@
 #define NODISCARD
 #endif
 
+/*** Template Helper Functions for Container Operations ***/
+/**
+ * @brief 	Helps comparing two different or equal type of arrays with the same size.
+ * @param 	leftData	Left operand of comparison operator
+ * @param 	rightData	Right operand of comparison operator
+ * @param 	size		Comparison range in number of elements
+ * @return	true 		If all elements in the specified are equal
+ */
+template<class T, class _T>
+static bool CompareHelper(const T* leftData, const _T* rightData, const std::size_t size)
+{
+	if(leftData == reinterpret_cast<const T*>(rightData))	// Self comparison
+		return true;
+
+	/* Comparing with std::memcmp is not eligible because although the size of
+	 * individual elements might be unequal (e.g. double(8) and int(4)),
+	 * their values can be equal (e.g. int(65) = double(65.0))*/
+	for(size_t index = 0; index < size; ++index)
+		if(leftData[index] != rightData[index])	// Compare each element
+			return false;
+
+	return true;
+}
+
 /*** Container Class ***/
 template<class T, std::size_t SIZE>
 class Array{
 public:
 	/*** Constructors and Destructors ***/
-	Array() noexcept = default;							// Default constructor
-	Array(const T& fillValue) noexcept;					// Fill constructor
-	Array(const Array& copyArr) noexcept;				// Copy constructor
-	Array(const T* const source, const std::size_t size);	// Construct with C-Style array
-	Array(std::initializer_list<T> initializerList);	// Initializer_list constructor
+	Array() noexcept = default;											// Default constructor
+	Array(const T& fillValue) noexcept;									// Fill constructor
+	Array(const Array& copyArr) noexcept;								// Copy constructor
+	Array(const T* const source, const std::size_t size) noexcept;		// Construct with C-Style array
+	Array(std::initializer_list<T> initializerList);					// Initializer_list constructor
 
 	~Array() = default;
 
@@ -54,13 +78,10 @@ public:
 	NODISCARD const T& operator[](const std::size_t index) const { return data[index]; }	// Subscript for non-assignable reference
 	NODISCARD T& operator[](const std::size_t index) 			{ return data[index]; }	// Subscript for assignable reference
 
-	NODISCARD bool operator==(const Array& rightArr) const noexcept;           // Array comparison
-	NODISCARD bool operator!=(const Array& rightArr) const noexcept;           // Array comparison by inequality
-
-	template<class _T>
-	NODISCARD bool operator==(const Array<_T, SIZE>& rightArr) const noexcept;           // Array of different types comparison
-	template<class _T>
-	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;           // Array of different types comparison by inequality
+	template<class _T>	// Compare any kind of arrays
+	NODISCARD bool operator==(const Array<_T, SIZE>& rightArr) const noexcept;
+	template<class _T>	// Compare any kind of arrays by unequality
+	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;
 
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
@@ -118,58 +139,26 @@ Array<T, SIZE>::Array(std::initializer_list<T> initializerList)
 }
 
 /**
- * @brief	Comparison operator compares two arrays
- * @param 	rightArr	Array to be compared with
- * @return	true 		If the elements are equal
- * @note	Comparing arrays of different types and size is restricted.
- * 			A compile time error will occur.
- */
-template<class T, std::size_t SIZE>
-NODISCARD bool Array<T, SIZE>::operator==(const Array& rightArr) const noexcept
-{
-	if(this == &rightArr)	// Self comparison
-		return true;
-
-	return (0 == std::memcmp(this->data, rightArr.data, this->getSizeRaw()));
-}
-
-/**
- * @brief	In-comparison operator compares two arrays
- * @param 	rightArr	Array to be compared with
- * @return	true 		If the elements are not equal
- * @note	Comparing arrays of different types and size is restricted.
- * 			A compile time error will occur.
- */
-template<class T, std::size_t SIZE>
-NODISCARD bool Array<T, SIZE>::operator!=(const Array& rightArr) const noexcept
-{
-	return !(this->operator==(rightArr));
-}
-
-/**
  * @brief	Comparison operator compares two arrays of different types
  * @param 	rightArr	Array of another type to be compared with
  * @return	true 		If the elements are equal
  * @note	Comparing arrays of different size is restricted.
- * 			A compile time error will occur.
+ * 			A compile time error might occur.
  */
 template<class T, std::size_t SIZE>
 template<class _T>
 NODISCARD bool Array<T, SIZE>::operator==(const Array<_T, SIZE>& rightArr) const noexcept
 {
-	if(getSize() != rightArr.getSize())
-		return false;
-
-	/* Comparing with std::memcmp is not eligible because of that
-	 * although the size of individual elements might not be
-	 * equal(e.g. double(8) and int(4)), their values can be equal. */
-	for(std::size_t index = 0; index < getSize(); ++index)
-		if(data[index] != rightArr[index])
-			return false;
-
-	return true;
+	return CompareHelper(this->cbegin(), rightArr.cbegin(), SIZE);
 }
 
+/**
+ * @brief	Comparison operator compares two arrays of different types
+ * @param 	rightArr	Array of another type to be compared with
+ * @return	false 		If the elements are equal
+ * @note	Comparing arrays of different size is restricted.
+ * 			A compile time error might occur.
+ */
 template<class T, std::size_t SIZE>
 template<class _T>
 NODISCARD bool Array<T, SIZE>::operator!=(const Array<_T, SIZE>& rightArr) const noexcept
