@@ -3,10 +3,12 @@
  *  @details    A template container class with an underlying array data structure.
  *              This container is designed for embedded devices with limited resources.
  *              Dynamic allocation is not preferred to prevent fragmentation and some other performance related problems.
+ *              Code size optimizations is handled with helper functions.
  *  @author     Caglayan DOKME, caglayandokme@gmail.com
  *  @date       March 19, 2021 	-> First release
  *  			March 20, 2021 	-> Comparison operators overloaded.
  *  							-> Initializer list constructor added.
+ *  							-> Helper functions added to decrease code size.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -68,6 +70,9 @@ static void FillHelper(T* data, const std::size_t size, const T& fillValue)
 template<class T, class _T>
 static void CopyHelper(T* destData, const _T* sourceData, const std::size_t size)
 {
+	if(destData == reinterpret_cast<const T*>(sourceData))	// Self comparison
+		return;
+
 	for(std::size_t index = 0; index < size; ++index)
 		destData[index] = sourceData[index];
 }
@@ -82,7 +87,10 @@ public:
 
 	template<class _T, std::size_t _SIZE>
 	Array(const Array<_T, _SIZE>& copyArr) noexcept;					// Copy constructor
-	Array(const T* const source, const std::size_t size) noexcept;		// Construct with C-Style array
+
+	template<class _T>
+	Array(const _T* const source, const std::size_t size);				// Construct with C-Style array of any type
+
 	Array(std::initializer_list<T> initializerList);					// Initializer_list constructor
 
 	~Array() = default;
@@ -141,12 +149,15 @@ Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr) noexcept
  * @param 	source		Source buffer
  * @param 	sourceSize	Number of elements in the source
  * @note	In case of an inequality between size values, the lower one is chosen
+ * @note	noexcept exception specifier is not used due to the possibility
+ * 			of wrong sourceSize inputs.
  */
 template<class T, std::size_t SIZE>
-Array<T, SIZE>::Array(const T* const source, const std::size_t sourceSize) noexcept
+template<class _T>
+Array<T, SIZE>::Array(const _T* const source, const std::size_t sourceSize)
 {
 	if(source != nullptr)
-		std::memcpy(data, source, sizeof(T) * ((sourceSize < SIZE) ? sourceSize : SIZE));
+		CopyHelper(this->begin(), source, ((SIZE <= sourceSize) ? SIZE : sourceSize));
 }
 
 /**
