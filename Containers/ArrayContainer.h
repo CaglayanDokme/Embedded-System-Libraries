@@ -39,7 +39,7 @@
  * @return	true 		If all elements in the specified are equal
  */
 template<class T, class _T>
-static bool CompareHelper(const T* leftData, const _T* rightData, const std::size_t size)
+static bool CompareHelper(const T* leftData, const _T* rightData, const std::size_t size) noexcept
 {
 	if(leftData == reinterpret_cast<const T*>(rightData))	// Self comparison
 		return true;
@@ -58,10 +58,10 @@ static bool CompareHelper(const T* leftData, const _T* rightData, const std::siz
  * @brief	Fills the given data array with given values
  * @param 	data		Destination resource area
  * @param 	size		Range of fill
- * @param 	fillValue	Reference value
+ * @param 	fillValue	Reference value for filling
  */
 template<class T>
-static void FillHelper(T* data, const std::size_t size, const T& fillValue)
+static void FillHelper(T* data, const std::size_t size, const T& fillValue) noexcept
 {
 	for(std::size_t index = 0; index < size; ++index)
 		data[index] = fillValue;
@@ -75,6 +75,19 @@ static void CopyHelper(T* destData, const _T* sourceData, const std::size_t size
 
 	for(std::size_t index = 0; index < size; ++index)
 		destData[index] = sourceData[index];
+}
+
+template<class T, class _T>
+static void CopyInitListHelper(T* destData, const std::initializer_list<_T>initList, const std::size_t size) noexcept
+{
+	std::size_t index = 0;
+	for(const _T& element : initList)
+	{
+		destData[index++] = element;
+
+		if(index == size)
+			break;
+	}
 }
 
 /*** Container Class ***/
@@ -91,7 +104,8 @@ public:
 	template<class _T>
 	Array(const _T* const source, const std::size_t size);				// Construct with C-Style array of any type
 
-	Array(std::initializer_list<T> initializerList);					// Initializer_list constructor
+	template<class _T>
+	Array(std::initializer_list<_T> initializerList);					// Initializer_list constructor
 
 	~Array() = default;
 
@@ -165,11 +179,10 @@ Array<T, SIZE>::Array(const _T* const source, const std::size_t sourceSize)
  * @param initializerList	Source list
  */
 template<class T, std::size_t SIZE>
-Array<T, SIZE>::Array(std::initializer_list<T> initializerList)
+template<class _T>
+Array<T, SIZE>::Array(std::initializer_list<_T> initializerList)
 {
-	std::size_t index = 0;
-	for(const T& element : initializerList)
-		data[index++] = element;
+	CopyInitListHelper(this->begin(), initializerList, SIZE);
 }
 
 /**
