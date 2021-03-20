@@ -67,6 +67,13 @@ static void FillHelper(T* data, const std::size_t size, const T& fillValue) noex
 		data[index] = fillValue;
 }
 
+/**
+ * @brief 	Copies the elements from the source to destination in the range of given sizes
+ * @param 	destData	Destination resource
+ * @param 	sourceData	Source resource
+ * @param 	size		Range of copy operation
+ * @note	Resource given by user might not be valid, thus not specified as noexcept
+ */
 template<class T, class _T>
 static void CopyHelper(T* destData, const _T* sourceData, const std::size_t size)
 {
@@ -77,6 +84,12 @@ static void CopyHelper(T* destData, const _T* sourceData, const std::size_t size
 		destData[index] = sourceData[index];
 }
 
+/**
+ * @brief 	Copies the elements from the source to destination in the range of given sizes
+ * @param 	destData	Destination resource
+ * @param 	initList	Source initializer list
+ * @param 	size		Range of copy operation
+ */
 template<class T, class _T>
 static void CopyInitListHelper(T* destData, const std::initializer_list<_T>initList, const std::size_t size) noexcept
 {
