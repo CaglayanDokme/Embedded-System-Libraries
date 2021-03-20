@@ -17,7 +17,7 @@
 #define ARRAY_CONTAINER_H
 
 /** Libraries **/
-#include <cstddef>			// For size_t
+#include <cstddef>			// For std::size_t
 #include <cstring>			// For memcpy
 #include <initializer_list>	// For initializer_list constructor
 
@@ -29,14 +29,14 @@
 #endif
 
 /*** Container Class ***/
-template<class T, size_t SIZE>
+template<class T, std::size_t SIZE>
 class Array{
 public:
 	/*** Constructors and Destructors ***/
 	Array() noexcept = default;							// Default constructor
 	Array(const T& fillValue) noexcept;					// Fill constructor
 	Array(const Array& copyArr) noexcept;				// Copy constructor
-	Array(const T* const source, const size_t size);	// Construct with C-Style array
+	Array(const T* const source, const std::size_t size);	// Construct with C-Style array
 	Array(std::initializer_list<T> initializerList);	// Initializer_list constructor
 
 	~Array() = default;
@@ -51,15 +51,15 @@ public:
 	NODISCARD const_iterator cend() const		{ return data + SIZE; 	}
 
 	/*** Operators ***/
-	NODISCARD const T& operator[](const size_t index) const { return data[index]; }	// Subscript for non-assignable reference
-	NODISCARD T& operator[](const size_t index) 			{ return data[index]; }	// Subscript for assignable reference
+	NODISCARD const T& operator[](const std::size_t index) const { return data[index]; }	// Subscript for non-assignable reference
+	NODISCARD T& operator[](const std::size_t index) 			{ return data[index]; }	// Subscript for assignable reference
 
 	NODISCARD bool operator==(const Array& rightArr) const noexcept;           // Array comparison
 	NODISCARD bool operator!=(const Array& rightArr) const noexcept;           // Array comparison by inequality
 
 	/*** Status Checkers ***/
-	NODISCARD constexpr size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
-	NODISCARD constexpr size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
+	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
+	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
 
 private:
 	T data[SIZE];
@@ -69,7 +69,7 @@ private:
  * @brief	Fill constructor fills every element with a copy of the given one.
  * @param 	fillValue	Reference value for filling.
  */
-template<class T, size_t SIZE>
+template<class T, std::size_t SIZE>
 Array<T, SIZE>::Array(const T& fillValue) noexcept
 {
 	for(T& element : data)
@@ -81,8 +81,8 @@ Array<T, SIZE>::Array(const T& fillValue) noexcept
  * @param 	copyArr	Source array.
  * @note	Copying is done via a standard library function to provide special optimizations.
  */
-template<class T, size_t SIZE>
-Array<T, SIZE>::Array(const Array<T, SIZE>& copyArr) noexcept
+template<class T, std::size_t SIZE>
+Array<T, SIZE>::Array(const Array& copyArr) noexcept
 {
 	memcpy(data, copyArr.data, sizeof(T) * SIZE);
 }
@@ -93,21 +93,21 @@ Array<T, SIZE>::Array(const Array<T, SIZE>& copyArr) noexcept
  * @param 	sourceSize	Number of elements in the source
  * @note	In case of an inequality between size values, the lower one is chosen.
  */
-template<class T, size_t SIZE>
-Array<T, SIZE>::Array(const T* const source, const size_t sourceSize)
+template<class T, std::size_t SIZE>
+Array<T, SIZE>::Array(const T* const source, const std::size_t sourceSize)
 {
 	if(source != nullptr)
-		memcpy(data, source, sizeof(T) * ((sourceSize < SIZE) ? sourceSize : SIZE));
+		std::memcpy(data, source, sizeof(T) * ((sourceSize < SIZE) ? sourceSize : SIZE));
 }
 
 /**
  * @brief Constructs the array with brace-enclosed initializer list.
  * @param initializerList	Source list
  */
-template<class T, size_t SIZE>
+template<class T, std::size_t SIZE>
 Array<T, SIZE>::Array(std::initializer_list<T> initializerList)
 {
-	size_t index = 0;
+	std::size_t index = 0;
 	for(const T& element : initializerList)
 		data[index++] = element;
 }
@@ -119,7 +119,7 @@ Array<T, SIZE>::Array(std::initializer_list<T> initializerList)
  * @note	Comparing arrays of different types and size is restricted.
  * 			A compile time error will occur.
  */
-template<class T, size_t SIZE>
+template<class T, std::size_t SIZE>
 NODISCARD bool Array<T, SIZE>::operator==(const Array& rightArr) const noexcept
 {
 	if(this == &rightArr)	// Self comparison
@@ -138,7 +138,7 @@ NODISCARD bool Array<T, SIZE>::operator==(const Array& rightArr) const noexcept
  * @note	Comparing arrays of different types and size is restricted.
  * 			A compile time error will occur.
  */
-template<class T, size_t SIZE>
+template<class T, std::size_t SIZE>
 NODISCARD bool Array<T, SIZE>::operator!=(const Array& rightArr) const noexcept
 {
 	return !(this->operator==(rightArr));
