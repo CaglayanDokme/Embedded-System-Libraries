@@ -71,6 +71,10 @@ public:
 	template<class _T, std::size_t _SIZE>	// Copy assignment operator
 	Array& operator=(const Array<_T, _SIZE>& copyArr) noexcept;
 
+	/*** Operations ***/
+	template<class _T>
+	Array& Fill(const _T& fillValue) noexcept;
+
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
 	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
@@ -152,6 +156,7 @@ static void CopyInitListHelper(T* destData, const std::initializer_list<_T>initL
 	}
 }
 
+/*** Implementations of Container Class Methods ***/
 /**
  * @brief	Fill constructor fills every element with a copy of the given one
  * @param 	fillValue	Reference value for filling.
@@ -240,6 +245,20 @@ template<class _T, std::size_t _SIZE>
 Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr) noexcept
 {
 	CopyHelper(this->begin(), copyArr.cbegin(), ((SIZE <= _SIZE) ? SIZE : _SIZE));
+
+	return *this;
+}
+
+/**
+ * @brief	Fills the array with exact copies of the given fill value.
+ * @param 	fillValue 	Reference fill value
+ * @return	lValue reference to the left array to support cascaded calls.
+ */
+template<class T, std::size_t SIZE>
+template<class _T>
+Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue) noexcept
+{
+	FillHelper(this->begin(), SIZE, fillValue);
 
 	return *this;
 }
