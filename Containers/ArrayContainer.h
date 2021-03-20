@@ -8,7 +8,7 @@
  *  @date       March 19, 2021 	-> First release
  *  			March 20, 2021 	-> Comparison operators overloaded.
  *  							-> Initializer list constructor added.
- *  							-> Helper functions added to decrease code size.
+ *  							-> Helper functions added to decrease the code size.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -29,6 +29,56 @@
 #else
 #define NODISCARD
 #endif
+
+/*** Container Class ***/
+template<class T, std::size_t SIZE>
+class Array{
+	static_assert(SIZE != 0, "Array size cannot be zero!");
+
+public:
+	/*** Constructors and Destructors ***/
+	Array() noexcept = default;											// Default constructor
+	Array(const T& fillValue) noexcept;									// Fill constructor
+
+	template<class _T, std::size_t _SIZE>
+	Array(const Array<_T, _SIZE>& copyArr) noexcept;					// Copy constructor
+
+	template<class _T>
+	Array(const _T* const source, const std::size_t size);				// Construct with C-Style array of any type
+
+	template<class _T>
+	Array(std::initializer_list<_T> initializerList);					// Initializer_list constructor
+
+	~Array() = default;
+
+	/*** Iterators ***/
+	using iterator 			= T*;
+	using const_iterator 	= const T*;
+
+	NODISCARD iterator begin() 					{ return data; 			}
+	NODISCARD iterator end() 					{ return data + SIZE; 	}
+	NODISCARD const_iterator cbegin() const 	{ return data; 			}
+	NODISCARD const_iterator cend() const		{ return data + SIZE; 	}
+
+	/*** Operators ***/
+	NODISCARD const T& operator[](const std::size_t index) const 	{ return data[index]; }	// Subscript for non-assignable reference
+	NODISCARD T& operator[](const std::size_t index) 				{ return data[index]; }	// Subscript for assignable reference
+
+	template<class _T>	// Compare any kind of arrays
+	NODISCARD bool operator==(const Array<_T, SIZE>& rightArr) const noexcept;
+	template<class _T>	// Compare any kind of arrays by unequality
+	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;
+
+	template<class _T, std::size_t _SIZE>	// Copy assignment operator
+	Array& operator=(const Array<_T, _SIZE>& copyArr) noexcept;
+
+	/*** Status Checkers ***/
+	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
+	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
+
+private:
+	T data[SIZE];
+};
 
 /*** Template Helper Functions for Container Operations ***/
 /**
@@ -102,56 +152,6 @@ static void CopyInitListHelper(T* destData, const std::initializer_list<_T>initL
 			break;
 	}
 }
-
-/*** Container Class ***/
-template<class T, std::size_t SIZE>
-class Array{
-	static_assert(SIZE != 0, "Array size cannot be zero!");
-
-public:
-	/*** Constructors and Destructors ***/
-	Array() noexcept = default;											// Default constructor
-	Array(const T& fillValue) noexcept;									// Fill constructor
-
-	template<class _T, std::size_t _SIZE>
-	Array(const Array<_T, _SIZE>& copyArr) noexcept;					// Copy constructor
-
-	template<class _T>
-	Array(const _T* const source, const std::size_t size);				// Construct with C-Style array of any type
-
-	template<class _T>
-	Array(std::initializer_list<_T> initializerList);					// Initializer_list constructor
-
-	~Array() = default;
-
-	/*** Iterators ***/
-	using iterator 			= T*;
-	using const_iterator 	= const T*;
-
-	NODISCARD iterator begin() 					{ return data; 			}
-	NODISCARD iterator end() 					{ return data + SIZE; 	}
-	NODISCARD const_iterator cbegin() const 	{ return data; 			}
-	NODISCARD const_iterator cend() const		{ return data + SIZE; 	}
-
-	/*** Operators ***/
-	NODISCARD const T& operator[](const std::size_t index) const 	{ return data[index]; }	// Subscript for non-assignable reference
-	NODISCARD T& operator[](const std::size_t index) 				{ return data[index]; }	// Subscript for assignable reference
-
-	template<class _T>	// Compare any kind of arrays
-	NODISCARD bool operator==(const Array<_T, SIZE>& rightArr) const noexcept;
-	template<class _T>	// Compare any kind of arrays by unequality
-	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;
-
-	template<class _T, std::size_t _SIZE>	// Copy assignment operator
-	Array& operator=(const Array<_T, _SIZE>& copyArr) noexcept;
-
-	/*** Status Checkers ***/
-	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
-	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
-
-private:
-	T data[SIZE];
-};
 
 /**
  * @brief	Fill constructor fills every element with a copy of the given one
