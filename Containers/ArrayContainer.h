@@ -142,6 +142,9 @@ public:
 	template<class _T>	// Compare any kind of arrays by unequality
 	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;
 
+	template<class _T, std::size_t _SIZE>	// Copy assignment operator
+	Array& operator=(const Array<_T, _SIZE>& copyArr) noexcept;
+
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
 	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
@@ -226,6 +229,20 @@ template<class _T>
 NODISCARD bool Array<T, SIZE>::operator!=(const Array<_T, SIZE>& rightArr) const noexcept
 {
 	return !(this->operator==(rightArr));
+}
+
+/**
+ * @brief	Copy assignment operator
+ * @param 	copyArr	Source array
+ * @return	lValue reference to the left array to support cascaded calls.
+ */
+template<class T, std::size_t SIZE>
+template<class _T, std::size_t _SIZE>
+Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr) noexcept
+{
+	CopyHelper(this->begin(), copyArr.cbegin(), ((SIZE <= _SIZE) ? SIZE : _SIZE));
+
+	return *this;
 }
 
 #endif // Recursive inclusion preventer
