@@ -20,7 +20,6 @@
 
 /** Libraries **/
 #include <cstddef>			// For size_t
-#include <cstring>			// For memcpy, memcmp
 #include <initializer_list>	// For initializer_list constructor
 
 /** Special definitions **/
