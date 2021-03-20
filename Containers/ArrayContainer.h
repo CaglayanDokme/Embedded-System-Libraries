@@ -45,7 +45,7 @@ static bool CompareHelper(const T* leftData, const _T* rightData, const std::siz
 	/* Comparing with std::memcmp is not eligible because although the size of
 	 * individual elements might be unequal (e.g. double(8) and int(4)),
 	 * their values can be equal (e.g. int(65) = double(65.0))*/
-	for(size_t index = 0; index < size; ++index)
+	for(std::size_t index = 0; index < size; ++index)
 		if(leftData[index] != rightData[index])	// Compare each element
 			return false;
 
@@ -61,8 +61,15 @@ static bool CompareHelper(const T* leftData, const _T* rightData, const std::siz
 template<class T>
 static void FillHelper(T* data, const std::size_t size, const T& fillValue)
 {
-	for(size_t index = 0; index < size; ++index)
+	for(std::size_t index = 0; index < size; ++index)
 		data[index] = fillValue;
+}
+
+template<class T, class _T>
+static void CopyHelper(T* destData, const _T* sourceData, const std::size_t size)
+{
+	for(std::size_t index = 0; index < size; ++index)
+		destData[index] = sourceData[index];
 }
 
 /*** Container Class ***/
@@ -72,7 +79,9 @@ public:
 	/*** Constructors and Destructors ***/
 	Array() noexcept = default;											// Default constructor
 	Array(const T& fillValue) noexcept;									// Fill constructor
-	Array(const Array& copyArr) noexcept;								// Copy constructor
+
+	template<class _T, std::size_t _SIZE>
+	Array(const Array<_T, _SIZE>& copyArr) noexcept;					// Copy constructor
 	Array(const T* const source, const std::size_t size) noexcept;		// Construct with C-Style array
 	Array(std::initializer_list<T> initializerList);					// Initializer_list constructor
 
@@ -105,7 +114,7 @@ private:
 };
 
 /**
- * @brief	Fill constructor fills every element with a copy of the given one.
+ * @brief	Fill constructor fills every element with a copy of the given one
  * @param 	fillValue	Reference value for filling.
  */
 template<class T, std::size_t SIZE>
@@ -115,24 +124,26 @@ Array<T, SIZE>::Array(const T& fillValue) noexcept
 }
 
 /**
- * @brief	Copy constructor copies elements from another array.
- * @param 	copyArr	Source array.
- * @note	Copying is done via a standard library function to provide special optimizations.
+ * @brief	Copy constructor copies elements from another array
+ * @param 	copyArr	Source array
+ * @note	The source array can be of different type and size
+ * @note	Copy size is determined as the lower one of size attributes
  */
 template<class T, std::size_t SIZE>
-Array<T, SIZE>::Array(const Array& copyArr) noexcept
+template<class _T, std::size_t _SIZE>
+Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr) noexcept
 {
-	memcpy(data, copyArr.data, sizeof(T) * SIZE);
+	CopyHelper(this->begin(), copyArr.cbegin(), ((SIZE <= _SIZE) ? SIZE : _SIZE));
 }
 
 /**
- * @brief	Construct the container with the given C-Style array.
+ * @brief	Construct the container with the given C-Style array
  * @param 	source		Source buffer
  * @param 	sourceSize	Number of elements in the source
- * @note	In case of an inequality between size values, the lower one is chosen.
+ * @note	In case of an inequality between size values, the lower one is chosen
  */
 template<class T, std::size_t SIZE>
-Array<T, SIZE>::Array(const T* const source, const std::size_t sourceSize)
+Array<T, SIZE>::Array(const T* const source, const std::size_t sourceSize) noexcept
 {
 	if(source != nullptr)
 		std::memcpy(data, source, sizeof(T) * ((sourceSize < SIZE) ? sourceSize : SIZE));
