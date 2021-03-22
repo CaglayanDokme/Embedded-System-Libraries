@@ -76,6 +76,9 @@ public:
 	template<class _T>
 	Array& Fill(const _T& fillValue) noexcept;
 
+	template<class _T>
+	Array& Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos = SIZE) noexcept;
+
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
 	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
@@ -231,6 +234,23 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue) noexcept
 {
 	for(T& element : *this)
 		element = fillValue;
+
+	return *this;
+}
+
+/**
+ * @brief	Fills a sub-range of array with exact copies of the given fill value.
+ * @param 	fillValue	Reference fill value
+ * @param 	startPos	Start position for filling
+ * @param 	endPos		End position for filling(included in the operation)
+ * @return	lValue reference to the left array to support cascaded calls.
+ */
+template<class T, std::size_t SIZE>
+template<class _T>
+Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos) noexcept
+{
+	for(std::size_t index = startPos; (index < SIZE) && (index <= endPos); ++index)
+		data[index] = fillValue;
 
 	return *this;
 }
