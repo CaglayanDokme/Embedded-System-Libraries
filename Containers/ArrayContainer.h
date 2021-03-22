@@ -40,7 +40,7 @@ class Array{
 public:
 	/*** Constructors and Destructors ***/
 	Array() noexcept = default;											// Default constructor
-	Array(const T& fillValue) noexcept;									// Fill constructor
+	Array(const T& fillValue);											// Fill constructor
 
 	template<class _T, std::size_t _SIZE>
 	Array(const Array<_T, _SIZE>& copyArr);								// Copy constructor
@@ -72,17 +72,17 @@ public:
 	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;
 
 	template<class _T, std::size_t _SIZE>	// Copy assignment operator
-	Array& operator=(const Array<_T, _SIZE>& copyArr) noexcept;
+	Array& operator=(const Array<_T, _SIZE>& copyArr);
 
 	/*** Operations ***/
 	template<class _T>
-	Array& Fill(const _T& fillValue) noexcept;
+	Array& Fill(const _T& fillValue);
 
 	template<class _T>
-	Array& Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos = SIZE) noexcept;
+	Array& Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos = SIZE);
 
 	template<class _T>
-	Array& Fill(const _T& fillValue, iterator startPos, iterator endPos = end()) noexcept;
+	Array& Fill(const _T& fillValue, iterator startPos, iterator endPos = end());
 
 	template<class RuleT>
 	Array& FillWithRule(const RuleT& predicate);
@@ -100,7 +100,7 @@ private:
  * @param 	fillValue	Reference value for filling.
  */
 template<class T, std::size_t SIZE>
-Array<T, SIZE>::Array(const T& fillValue) noexcept
+Array<T, SIZE>::Array(const T& fillValue)
 {
 	for(T& element : *this)
 		element = fillValue;
@@ -215,7 +215,7 @@ NODISCARD bool Array<T, SIZE>::operator!=(const Array<_T, SIZE>& rightArr) const
  */
 template<class T, std::size_t SIZE>
 template<class _T, std::size_t _SIZE>
-Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr) noexcept
+Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr)
 {
 	if(this->cbegin() == reinterpret_cast<const_iterator>(copyArr.cbegin()))	// Check self copy
 		return *this;
@@ -238,7 +238,7 @@ Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr) noexc
  */
 template<class T, std::size_t SIZE>
 template<class _T>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue) noexcept
+Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue)
 {
 	for(T& element : *this)
 		element = fillValue;
@@ -255,7 +255,7 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue) noexcept
  */
 template<class T, std::size_t SIZE>
 template<class _T>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos) noexcept
+Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos)
 {
 	for(std::size_t index = startPos; (index < SIZE) && (index < endPos); ++index)
 		data[index] = fillValue;
@@ -272,7 +272,7 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, const std::size_t star
  */
 template<class T, std::size_t SIZE>
 template<class _T>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, iterator startPos, iterator endPos) noexcept
+Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, iterator startPos, iterator endPos)
 {
 	if(startPos < begin())	// Manual address input might violate the address range
 		return *this;
