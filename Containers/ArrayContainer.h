@@ -89,7 +89,7 @@ public:
 
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
-	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
+	NODISCARD constexpr std::size_t getSizeRaw() const noexcept		{ return SIZE * sizeof(T);	}	// Return actual size in bytes
 
 private:
 	T data[SIZE];
