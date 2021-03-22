@@ -9,6 +9,7 @@
  *  			March 20, 2021 	-> Comparison operators overloaded.
  *  							-> Initializer list constructor added.
  *  							-> Helper functions added to decrease the code size.
+ *  			March 21, 2021 	-> Helper functions removed as the template functions are implicitly declared as inline.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -83,80 +84,6 @@ private:
 	T data[SIZE];
 };
 
-/*** Template Helper Functions for Container Operations ***/
-/**
- * @brief 	Helps comparing two different or equal type of arrays with the same size.
- * @param 	leftData	Left operand of comparison operator
- * @param 	rightData	Right operand of comparison operator
- * @param 	size		Comparison range in number of elements
- * @return	true 		If all elements in the specified are equal
- */
-template<class T, class _T>
-static bool CompareHelper(const T* leftData, const _T* rightData, const std::size_t size) noexcept
-{
-	if(leftData == reinterpret_cast<const T*>(rightData))	// Self comparison
-		return true;
-
-	/* Comparing with std::memcmp is not eligible because although the size of
-	 * individual elements might be unequal (e.g. double(8) and int(4)),
-	 * their values can be equal (e.g. int(65) = double(65.0))*/
-	for(std::size_t index = 0; index < size; ++index)
-		if(leftData[index] != rightData[index])	// Compare each element
-			return false;
-
-	return true;
-}
-
-/**
- * @brief	Fills the given data array with given values
- * @param 	data		Destination resource area
- * @param 	size		Range of fill
- * @param 	fillValue	Reference value for filling
- */
-template<class T>
-static void FillHelper(T* data, const std::size_t size, const T& fillValue) noexcept
-{
-	for(std::size_t index = 0; index < size; ++index)
-		data[index] = fillValue;
-}
-
-/**
- * @brief 	Copies the elements from the source to destination in the range of given sizes
- * @param 	destData	Destination resource
- * @param 	sourceData	Source resource
- * @param 	size		Range of copy operation
- * @note	Resource given by user might not be valid, thus not specified as noexcept
- */
-template<class T, class _T>
-static void CopyHelper(T* destData, const _T* sourceData, const std::size_t size)
-{
-	if(destData == reinterpret_cast<const T*>(sourceData))	// Self comparison
-		return;
-
-	for(std::size_t index = 0; index < size; ++index)
-		destData[index] = sourceData[index];
-}
-
-/**
- * @brief 	Copies the elements from the source to destination in the range of given sizes
- * @param 	destData	Destination resource
- * @param 	initList	Source initializer list
- * @param 	size		Range of copy operation
- */
-template<class T, class _T>
-static void CopyInitListHelper(T* destData, const std::initializer_list<_T>initList, const std::size_t size) noexcept
-{
-	std::size_t index = 0;
-	for(const _T& element : initList)
-	{
-		destData[index++] = element;
-
-		if(index == size)
-			break;
-	}
-}
-
-/*** Implementations of Container Class Methods ***/
 /**
  * @brief	Fill constructor fills every element with a copy of the given one
  * @param 	fillValue	Reference value for filling.
@@ -164,7 +91,8 @@ static void CopyInitListHelper(T* destData, const std::initializer_list<_T>initL
 template<class T, std::size_t SIZE>
 Array<T, SIZE>::Array(const T& fillValue) noexcept
 {
-	FillHelper(data, SIZE, fillValue);
+	for(T& element : *this)
+		element = fillValue;
 }
 
 /**
@@ -177,7 +105,15 @@ template<class T, std::size_t SIZE>
 template<class _T, std::size_t _SIZE>
 Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr) noexcept
 {
-	CopyHelper(this->begin(), copyArr.cbegin(), ((SIZE <= _SIZE) ? SIZE : _SIZE));
+	typename Array<_T, _SIZE>::const_iterator it = copyArr.cbegin();
+
+	for(T& element : *this)
+	{
+		element = *it;
+
+		if(it == copyArr.cend())
+			break;
+	}
 }
 
 /**
@@ -193,7 +129,10 @@ template<class _T>
 Array<T, SIZE>::Array(const _T* const source, const std::size_t sourceSize)
 {
 	if(source != nullptr)
-		CopyHelper(this->begin(), source, ((SIZE <= sourceSize) ? SIZE : sourceSize));
+	{
+		for(std::size_t index = 0; (index < SIZE) && (index < sourceSize); ++ index)
+			data[index] = source[index];
+	}
 }
 
 /**
@@ -204,7 +143,14 @@ template<class T, std::size_t SIZE>
 template<class _T>
 Array<T, SIZE>::Array(std::initializer_list<_T> initializerList)
 {
-	CopyInitListHelper(this->begin(), initializerList, SIZE);
+	std::size_t index = 0;
+	for(const _T& element : initializerList)
+	{
+		data[index++] = element;
+
+		if(index == SIZE)
+			break;
+	}
 }
 
 /**
@@ -218,7 +164,23 @@ template<class T, std::size_t SIZE>
 template<class _T>
 NODISCARD bool Array<T, SIZE>::operator==(const Array<_T, SIZE>& rightArr) const noexcept
 {
-	return CompareHelper(this->cbegin(), rightArr.cbegin(), SIZE);
+	if(this->cbegin() == reinterpret_cast<const_iterator>(rightArr.cbegin()))	// Self comparison
+			return true;
+
+	typename Array<_T, SIZE>::const_iterator itRight = rightArr.cbegin();
+
+	/* Comparing with std::memcmp is not eligible because although the size of
+	 * individual elements might be unequal (e.g. double(8) and int(4)),
+	 * their values can be equal (e.g. int(65) = double(65.0))*/
+	for(const T& element : *this)
+	{
+		if(element != *itRight)
+			return false;
+
+		++itRight;
+	}
+
+	return true;
 }
 
 /**
@@ -244,7 +206,16 @@ template<class T, std::size_t SIZE>
 template<class _T, std::size_t _SIZE>
 Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr) noexcept
 {
-	CopyHelper(this->begin(), copyArr.cbegin(), ((SIZE <= _SIZE) ? SIZE : _SIZE));
+	if(this->cbegin() == reinterpret_cast<const_iterator>(copyArr.cbegin()))	// Check self copy
+		return *this;
+
+	typename Array<_T, SIZE>::const_iterator itRight = copyArr.cbegin();
+
+	for(T& element : *this)
+	{
+		element = *itRight;
+		++itRight;
+	}
 
 	return *this;
 }
@@ -258,7 +229,8 @@ template<class T, std::size_t SIZE>
 template<class _T>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue) noexcept
 {
-	FillHelper(this->begin(), SIZE, fillValue);
+	for(T& element : *this)
+		element = fillValue;
 
 	return *this;
 }
