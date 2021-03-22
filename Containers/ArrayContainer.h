@@ -83,6 +83,9 @@ public:
 	template<class _T>
 	Array& Fill(const _T& fillValue, iterator startPos, iterator endPos = end()) noexcept;
 
+	template<class RuleT>
+	Array& Fill(const RuleT& predicate);
+
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
 	NODISCARD constexpr std::size_t getSizeRaw() const noexcept	{ return SIZE * sizeof(T);	}	// Return actual size in bytes
@@ -272,6 +275,27 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, iterator startPos, ite
 {
 	for(iterator it = startPos; (it != end()) && (it != endPos); ++it)
 		*it = fillValue;
+
+	return *this;
+}
+
+/**
+ * @brief	Position based fill operation
+ * @param 	predicate	Rule for calculating the element value using its position.
+ * @return	lValue reference to the left array to support cascaded calls.
+ *
+ * @note 	Example usage for this function:
+ *          userArr.Fill([](const std::size_t pos) {return (pos * pos);});
+ *
+ * @note    For more examples, refer to:
+ *          github.com/CaglayanDokme/CPP-Exercises/blob/main/FuncWithLambdaArg.cpp
+ */
+template<class T, std::size_t SIZE>
+template<class RuleT>
+Array<T, SIZE>& Array<T, SIZE>::Fill(const RuleT& predicate)
+{
+	for(std::size_t index = 0; index < SIZE; ++index)
+		data[index] = predicate(index);
 
 	return *this;
 }
