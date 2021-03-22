@@ -9,8 +9,9 @@
  *  			March 20, 2021 	-> Comparison operators overloaded.
  *  							-> Initializer list constructor added.
  *  							-> Helper functions added to decrease the code size.
- *  			March 21, 2021 	-> Helper functions removed as the template functions are implicitly declared as inline.
+ *  			March 22, 2021 	-> Helper functions removed as the template functions are implicitly declared as inline.
  *  							-> Position based fill operation added.
+ *  							-> Rule based fill operation added.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
