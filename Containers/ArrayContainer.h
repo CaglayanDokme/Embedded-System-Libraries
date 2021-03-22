@@ -57,10 +57,10 @@ public:
 	using iterator 			= T*;
 	using const_iterator 	= const T*;
 
-	NODISCARD iterator begin() 					{ return data; 			}
-	NODISCARD iterator end() 					{ return data + SIZE; 	}
-	NODISCARD const_iterator cbegin() const 	{ return data; 			}
-	NODISCARD const_iterator cend() const		{ return data + SIZE; 	}
+	NODISCARD iterator begin() noexcept					{ return data; 			}
+	NODISCARD iterator end() noexcept					{ return data + SIZE; 	}
+	NODISCARD const_iterator cbegin() const noexcept	{ return data; 			}
+	NODISCARD const_iterator cend() const noexcept		{ return data + SIZE; 	}
 
 	/*** Operators ***/
 	NODISCARD const T& operator[](const std::size_t index) const 	{ return data[index]; }	// Subscript for non-assignable reference
