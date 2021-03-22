@@ -84,7 +84,7 @@ public:
 	Array& Fill(const _T& fillValue, iterator startPos, iterator endPos = end()) noexcept;
 
 	template<class RuleT>
-	Array& Fill(const RuleT& predicate);
+	Array& FillWithRule(const RuleT& predicate);
 
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
@@ -273,7 +273,13 @@ template<class T, std::size_t SIZE>
 template<class _T>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, iterator startPos, iterator endPos) noexcept
 {
-	for(iterator it = startPos; (it != end()) && (it != endPos); ++it)
+	if(startPos < begin())	// Manual address input might violate the address range
+		return *this;
+
+	if(startPos >= endPos)
+		return *this;
+
+	for(iterator it = startPos; (it < end()) && (it < endPos); ++it)
 		*it = fillValue;
 
 	return *this;
@@ -292,7 +298,7 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, iterator startPos, ite
  */
 template<class T, std::size_t SIZE>
 template<class RuleT>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const RuleT& predicate)
+Array<T, SIZE>& Array<T, SIZE>::FillWithRule(const RuleT& predicate)
 {
 	for(std::size_t index = 0; index < SIZE; ++index)
 		data[index] = predicate(index);
