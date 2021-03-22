@@ -43,7 +43,7 @@ public:
 	Array(const T& fillValue) noexcept;									// Fill constructor
 
 	template<class _T, std::size_t _SIZE>
-	Array(const Array<_T, _SIZE>& copyArr) noexcept;					// Copy constructor
+	Array(const Array<_T, _SIZE>& copyArr);								// Copy constructor
 
 	template<class _T>
 	Array(const _T* const source, const std::size_t size);				// Construct with C-Style array of any type
@@ -114,7 +114,7 @@ Array<T, SIZE>::Array(const T& fillValue) noexcept
  */
 template<class T, std::size_t SIZE>
 template<class _T, std::size_t _SIZE>
-Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr) noexcept
+Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr)
 {
 	typename Array<_T, _SIZE>::const_iterator it = copyArr.cbegin();
 
@@ -122,7 +122,7 @@ Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr) noexcept
 	{
 		element = *it;
 
-		if(it == copyArr.cend())
+		if(++it == copyArr.cend())
 			break;
 	}
 }
