@@ -10,6 +10,7 @@
  *  							-> Initializer list constructor added.
  *  							-> Helper functions added to decrease the code size.
  *  			March 21, 2021 	-> Helper functions removed as the template functions are implicitly declared as inline.
+ *  							-> Position based fill operation added.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -78,6 +79,9 @@ public:
 
 	template<class _T>
 	Array& Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos = SIZE) noexcept;
+
+	template<class _T>
+	Array& Fill(const _T& fillValue, iterator startPos, iterator endPos = end()) noexcept;
 
 	/*** Status Checkers ***/
 	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
@@ -242,15 +246,32 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue) noexcept
  * @brief	Fills a sub-range of array with exact copies of the given fill value.
  * @param 	fillValue	Reference fill value
  * @param 	startPos	Start position for filling
- * @param 	endPos		End position for filling(included in the operation)
+ * @param 	endPos		End position for filling(excluded)
  * @return	lValue reference to the left array to support cascaded calls.
  */
 template<class T, std::size_t SIZE>
 template<class _T>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos) noexcept
 {
-	for(std::size_t index = startPos; (index < SIZE) && (index <= endPos); ++index)
+	for(std::size_t index = startPos; (index < SIZE) && (index < endPos); ++index)
 		data[index] = fillValue;
+
+	return *this;
+}
+
+/**
+ * @brief	Fills a sub-range of array with exact copies of the given fill value using iterators.
+ * @param 	fillValue	Reference fill value
+ * @param 	startPos	Start iterator position for filling
+ * @param 	endPos		End iterator position for filling(excluded)
+ * @return	lValue reference to the left array to support cascaded calls.
+ */
+template<class T, std::size_t SIZE>
+template<class _T>
+Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, iterator startPos, iterator endPos) noexcept
+{
+	for(iterator it = startPos; (it != end()) && (it != endPos); ++it)
+		*it = fillValue;
 
 	return *this;
 }
