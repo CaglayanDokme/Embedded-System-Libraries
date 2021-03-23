@@ -12,6 +12,7 @@
  *  			March 22, 2021 	-> Helper functions removed as the template functions are implicitly declared as inline.
  *  							-> Position based fill operation added.
  *  							-> Rule based fill operation added.
+ *  			March 23, 2021  -> Type traits added to related functions.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -24,9 +25,10 @@
 /** Libraries **/
 #include <cstddef>				// For size_t
 #include <initializer_list>		// For initializer_list constructor
+#include <type_traits>			// For compile time controls
 
 /** Special definitions **/
-#if __cplusplus >= 201703l	// If the C++ version is greater or equal to 2017xx
+#if __cplusplus >= 201703l		// If the C++ version is greater or equal to 2017xx
 #define NODISCARD [[nodiscard]]
 #else
 #define NODISCARD
@@ -103,8 +105,10 @@ private:
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>::Array(const U& fillValue)
+Array<T, SIZE>::Array(const U& fillValue) noexcept
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot fill construct with the given types!");
+
 	for(T& element : *this)
 		element = fillValue;
 }
@@ -119,6 +123,8 @@ template<class T, std::size_t SIZE>
 template<class U, std::size_t _SIZE>
 Array<T, SIZE>::Array(const Array<U, _SIZE>& copyArr)
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot copy construct with the given types!");
+
 	typename Array<U, _SIZE>::const_iterator it = copyArr.cbegin();
 
 	for(T& element : *this)
@@ -142,6 +148,8 @@ template<class T, std::size_t SIZE>
 template<class U>
 Array<T, SIZE>::Array(const U* const source, const std::size_t sourceSize)
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot launch C-Style constructor with the given types!");
+
 	if(source != nullptr)
 	{
 		for(std::size_t index = 0; (index < SIZE) && (index < sourceSize); ++ index)
@@ -157,6 +165,8 @@ template<class T, std::size_t SIZE>
 template<class U>
 Array<T, SIZE>::Array(std::initializer_list<U> initializerList)
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot launch initializer list constructor with the given types!");
+
 	std::size_t index = 0;
 	for(const U& element : initializerList)
 	{
@@ -220,6 +230,8 @@ template<class T, std::size_t SIZE>
 template<class U, std::size_t _SIZE>
 Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, _SIZE>& copyArr)
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot operate assignment with the given types!");
+
 	if(this->cbegin() == reinterpret_cast<const_iterator>(copyArr.cbegin()))	// Check self copy
 		return *this;
 
@@ -243,6 +255,8 @@ template<class T, std::size_t SIZE>
 template<class U>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue)
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot fill the Array with the given type of values!");
+
 	for(T& element : *this)
 		element = fillValue;
 
@@ -260,6 +274,8 @@ template<class T, std::size_t SIZE>
 template<class U>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, const std::size_t startPos, const std::size_t endPos)
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot fill the Array with the given type of values!");
+
 	for(std::size_t index = startPos; (index < SIZE) && (index < endPos); ++index)
 		data[index] = fillValue;
 
@@ -277,6 +293,8 @@ template<class T, std::size_t SIZE>
 template<class U>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, iterator startPos, iterator endPos)
 {
+	static_assert(std::is_assignable<T&, U>::value, "Cannot fill the Array with the given type of values!");
+
 	if(startPos < begin())	// Manual address input might violate the address range
 		return *this;
 
