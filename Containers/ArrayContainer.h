@@ -103,8 +103,10 @@ public:
 	Array& FillWithRule(const RuleT& predicate);
 
 	/*** Status Checkers ***/
-	NODISCARD constexpr size_type getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
-	NODISCARD constexpr size_type getSizeRaw() const noexcept		{ return SIZE * sizeof(T);	}	// Return actual size in bytes
+	NODISCARD constexpr size_type max_size() const noexcept 	{ return SIZE; 				}	// Return the maximum possible size
+	NODISCARD constexpr size_type size() const noexcept			{ return SIZE;				}	// Returns total number of elements
+	NODISCARD constexpr size_type sizeRaw() const noexcept		{ return SIZE * sizeof(T);	}	// Return actual size in bytes
+	NODISCARD constexpr bool empty() const noexcept 			{ return (SIZE == 0); 		}
 
 private:
 	value_type data[SIZE];
