@@ -97,7 +97,7 @@ public:
 	Array& Fill(const U& fillValue, const size_type startPos, const size_type endPos = SIZE);
 
 	template<class U>
-	Array& Fill(const U& fillValue, iterator startPos, iterator endPos = end());
+	Array& Fill(const U& fillValue, iterator startPos, iterator endPos);
 
 	template<class RuleT>
 	Array& FillWithRule(const RuleT& predicate);
@@ -318,7 +318,7 @@ template<class T, std::size_t SIZE>
 template<class U>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, iterator startPos, iterator endPos) noexcept(std::is_assignable<T&, U>::value)
 {
-	if(startPos < begin())	// Manual address input might violate the address range
+	if((startPos < begin()) || (startPos > end()))	// Manual address input might violate the address range
 		return *this;
 
 	if(startPos >= endPos)
