@@ -22,8 +22,8 @@
 #define ARRAY_CONTAINER_H
 
 /** Libraries **/
-#include <cstddef>			// For size_t
-#include <initializer_list>	// For initializer_list constructor
+#include <cstddef>				// For size_t
+#include <initializer_list>		// For initializer_list constructor
 
 /** Special definitions **/
 #if __cplusplus >= 201703l	// If the C++ version is greater or equal to 2017xx
@@ -40,7 +40,9 @@ class Array{
 public:
 	/*** Constructors and Destructors ***/
 	Array() noexcept = default;											// Default constructor
-	Array(const T& fillValue);											// Fill constructor
+
+	template<class U>
+	Array(const U& fillValue);											// Fill constructor
 
 	template<class U, std::size_t _SIZE>
 	Array(const Array<U, _SIZE>& copyArr);								// Copy constructor
@@ -100,7 +102,8 @@ private:
  * @param 	fillValue	Reference value for filling.
  */
 template<class T, std::size_t SIZE>
-Array<T, SIZE>::Array(const T& fillValue)
+template<class U>
+Array<T, SIZE>::Array(const U& fillValue)
 {
 	for(T& element : *this)
 		element = fillValue;
@@ -176,7 +179,7 @@ template<class U>
 NODISCARD bool Array<T, SIZE>::operator==(const Array<U, SIZE>& rightArr) const noexcept
 {
 	if(this->cbegin() == reinterpret_cast<const_iterator>(rightArr.cbegin()))	// Self comparison
-			return true;
+		return true;
 
 	typename Array<U, SIZE>::const_iterator itRight = rightArr.cbegin();
 
