@@ -183,7 +183,7 @@ NODISCARD bool Array<T, SIZE>::operator==(const Array<_T, SIZE>& rightArr) const
 	/* Comparing with std::memcmp is not eligible because although the size of
 	 * individual elements might be unequal (e.g. double(8) and int(4)),
 	 * their values can be equal (e.g. int(65) = double(65.0))*/
-	for(const T& element : *this)
+	for(const T& element : data)
 	{
 		if(element != *itRight)
 			return false;
