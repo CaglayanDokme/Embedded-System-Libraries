@@ -42,14 +42,14 @@ public:
 	Array() noexcept = default;											// Default constructor
 	Array(const T& fillValue);											// Fill constructor
 
-	template<class _T, std::size_t _SIZE>
-	Array(const Array<_T, _SIZE>& copyArr);								// Copy constructor
+	template<class U, std::size_t _SIZE>
+	Array(const Array<U, _SIZE>& copyArr);								// Copy constructor
 
-	template<class _T>
-	Array(const _T* const source, const std::size_t size);				// Construct with C-Style array of any type
+	template<class U>
+	Array(const U* const source, const std::size_t size);				// Construct with C-Style array of any type
 
-	template<class _T>
-	Array(std::initializer_list<_T> initializerList);					// Initializer_list constructor
+	template<class U>
+	Array(std::initializer_list<U> initializerList);					// Initializer_list constructor
 
 	~Array() = default;
 
@@ -66,23 +66,23 @@ public:
 	NODISCARD const T& operator[](const std::size_t index) const 	{ return data[index]; }	// Subscript for non-assignable reference
 	NODISCARD T& operator[](const std::size_t index) 				{ return data[index]; }	// Subscript for assignable reference
 
-	template<class _T>	// Compare any kind of arrays
-	NODISCARD bool operator==(const Array<_T, SIZE>& rightArr) const noexcept;
-	template<class _T>	// Compare any kind of arrays by unequality
-	NODISCARD bool operator!=(const Array<_T, SIZE>& rightArr) const noexcept;
+	template<class U>	// Compare any kind of arrays
+	NODISCARD bool operator==(const Array<U, SIZE>& rightArr) const noexcept;
+	template<class U>	// Compare any kind of arrays by unequality
+	NODISCARD bool operator!=(const Array<U, SIZE>& rightArr) const noexcept;
 
-	template<class _T, std::size_t _SIZE>	// Copy assignment operator
-	Array& operator=(const Array<_T, _SIZE>& copyArr);
+	template<class U, std::size_t _SIZE>	// Copy assignment operator
+	Array& operator=(const Array<U, _SIZE>& copyArr);
 
 	/*** Operations ***/
-	template<class _T>
-	Array& Fill(const _T& fillValue);
+	template<class U>
+	Array& Fill(const U& fillValue);
 
-	template<class _T>
-	Array& Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos = SIZE);
+	template<class U>
+	Array& Fill(const U& fillValue, const std::size_t startPos, const std::size_t endPos = SIZE);
 
-	template<class _T>
-	Array& Fill(const _T& fillValue, iterator startPos, iterator endPos = end());
+	template<class U>
+	Array& Fill(const U& fillValue, iterator startPos, iterator endPos = end());
 
 	template<class RuleT>
 	Array& FillWithRule(const RuleT& predicate);
@@ -113,10 +113,10 @@ Array<T, SIZE>::Array(const T& fillValue)
  * @note	Copy size is determined as the lower one of size attributes
  */
 template<class T, std::size_t SIZE>
-template<class _T, std::size_t _SIZE>
-Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr)
+template<class U, std::size_t _SIZE>
+Array<T, SIZE>::Array(const Array<U, _SIZE>& copyArr)
 {
-	typename Array<_T, _SIZE>::const_iterator it = copyArr.cbegin();
+	typename Array<U, _SIZE>::const_iterator it = copyArr.cbegin();
 
 	for(T& element : *this)
 	{
@@ -136,8 +136,8 @@ Array<T, SIZE>::Array(const Array<_T, _SIZE>& copyArr)
  * 			of wrong sourceSize inputs.
  */
 template<class T, std::size_t SIZE>
-template<class _T>
-Array<T, SIZE>::Array(const _T* const source, const std::size_t sourceSize)
+template<class U>
+Array<T, SIZE>::Array(const U* const source, const std::size_t sourceSize)
 {
 	if(source != nullptr)
 	{
@@ -151,11 +151,11 @@ Array<T, SIZE>::Array(const _T* const source, const std::size_t sourceSize)
  * @param initializerList	Source list
  */
 template<class T, std::size_t SIZE>
-template<class _T>
-Array<T, SIZE>::Array(std::initializer_list<_T> initializerList)
+template<class U>
+Array<T, SIZE>::Array(std::initializer_list<U> initializerList)
 {
 	std::size_t index = 0;
-	for(const _T& element : initializerList)
+	for(const U& element : initializerList)
 	{
 		data[index++] = element;
 
@@ -172,13 +172,13 @@ Array<T, SIZE>::Array(std::initializer_list<_T> initializerList)
  * 			A compile time error might occur.
  */
 template<class T, std::size_t SIZE>
-template<class _T>
-NODISCARD bool Array<T, SIZE>::operator==(const Array<_T, SIZE>& rightArr) const noexcept
+template<class U>
+NODISCARD bool Array<T, SIZE>::operator==(const Array<U, SIZE>& rightArr) const noexcept
 {
 	if(this->cbegin() == reinterpret_cast<const_iterator>(rightArr.cbegin()))	// Self comparison
 			return true;
 
-	typename Array<_T, SIZE>::const_iterator itRight = rightArr.cbegin();
+	typename Array<U, SIZE>::const_iterator itRight = rightArr.cbegin();
 
 	/* Comparing with std::memcmp is not eligible because although the size of
 	 * individual elements might be unequal (e.g. double(8) and int(4)),
@@ -202,8 +202,8 @@ NODISCARD bool Array<T, SIZE>::operator==(const Array<_T, SIZE>& rightArr) const
  * 			A compile time error might occur.
  */
 template<class T, std::size_t SIZE>
-template<class _T>
-NODISCARD bool Array<T, SIZE>::operator!=(const Array<_T, SIZE>& rightArr) const noexcept
+template<class U>
+NODISCARD bool Array<T, SIZE>::operator!=(const Array<U, SIZE>& rightArr) const noexcept
 {
 	return !(this->operator==(rightArr));
 }
@@ -214,13 +214,13 @@ NODISCARD bool Array<T, SIZE>::operator!=(const Array<_T, SIZE>& rightArr) const
  * @return	lValue reference to the left array to support cascaded calls.
  */
 template<class T, std::size_t SIZE>
-template<class _T, std::size_t _SIZE>
-Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr)
+template<class U, std::size_t _SIZE>
+Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, _SIZE>& copyArr)
 {
 	if(this->cbegin() == reinterpret_cast<const_iterator>(copyArr.cbegin()))	// Check self copy
 		return *this;
 
-	typename Array<_T, SIZE>::const_iterator itRight = copyArr.cbegin();
+	typename Array<U, SIZE>::const_iterator itRight = copyArr.cbegin();
 
 	for(T& element : *this)
 	{
@@ -237,8 +237,8 @@ Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<_T, _SIZE>& copyArr)
  * @return	lValue reference to the left array to support cascaded calls.
  */
 template<class T, std::size_t SIZE>
-template<class _T>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue)
+template<class U>
+Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue)
 {
 	for(T& element : *this)
 		element = fillValue;
@@ -254,8 +254,8 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue)
  * @return	lValue reference to the left array to support cascaded calls.
  */
 template<class T, std::size_t SIZE>
-template<class _T>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, const std::size_t startPos, const std::size_t endPos)
+template<class U>
+Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, const std::size_t startPos, const std::size_t endPos)
 {
 	for(std::size_t index = startPos; (index < SIZE) && (index < endPos); ++index)
 		data[index] = fillValue;
@@ -271,8 +271,8 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, const std::size_t star
  * @return	lValue reference to the left array to support cascaded calls.
  */
 template<class T, std::size_t SIZE>
-template<class _T>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const _T& fillValue, iterator startPos, iterator endPos)
+template<class U>
+Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, iterator startPos, iterator endPos)
 {
 	if(startPos < begin())	// Manual address input might violate the address range
 		return *this;
