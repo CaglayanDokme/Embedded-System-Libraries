@@ -88,6 +88,8 @@ public:
 	Array& operator=(const Array<U, _SIZE>& copyArr);
 
 	/*** Operations ***/
+	Array& Swap(Array& swapArr);
+
 	template<class U>
 	Array& Fill(const U& fillValue);
 
@@ -255,6 +257,29 @@ Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, _SIZE>& copyArr)
 		++itRight;
 	}
 
+	return *this;
+}
+
+/**
+ * @brief	Swaps two arrays of the same size and type
+ * @param 	swapArr Array to be swapped with
+ * @return	lValue reference to the left array to support cascaded calls.
+ */
+template<class T, std::size_t SIZE>
+Array<T, SIZE>& Array<T, SIZE>::Swap(Array<T, SIZE>& swapArr)
+{
+	if(&swapArr == this)		// Self swap control
+		return *this;
+
+	value_type temp;
+	iterator itLeft = begin(), itRight = swapArr.begin();
+
+	for(; itLeft != end(); ++itLeft, ++itRight)
+	{
+		temp 		= *itLeft;
+		*itLeft 	= *itRight;
+		*itRight 	= temp;
+	}
 	return *this;
 }
 
