@@ -105,7 +105,7 @@ private:
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>::Array(const U& fillValue) noexcept
+Array<T, SIZE>::Array(const U& fillValue)
 {
 	static_assert(std::is_assignable<T&, U>::value, "Cannot fill construct with the given types!");
 
@@ -114,10 +114,13 @@ Array<T, SIZE>::Array(const U& fillValue) noexcept
 }
 
 /**
- * @brief	Copy constructor copies elements from another array
- * @param 	copyArr	Source array
- * @note	The source array can be of different type and size
- * @note	Copy size is determined as the lower one of size attributes
+ * @brief		Copy constructor copies elements from another array
+ * @param 		copyArr	Source array
+ * @note		The source array can be of different type and size
+ * @note		Copy size is determined as the lower one of size attributes
+ *
+ * @attention 	Unintentional data loss may occur as the types and sizes might not be the same.
+ * 				It is the user's responsibility to consider etiher data or precision loss.
  */
 template<class T, std::size_t SIZE>
 template<class U, std::size_t _SIZE>
