@@ -13,6 +13,7 @@
  *  							-> Position based fill operation added.
  *  							-> Rule based fill operation added.
  *  			March 23, 2021  -> Type traits added to related functions.
+ *  							-> Standard named requirements added to class.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -40,6 +41,17 @@ class Array{
 	static_assert(SIZE != 0, "Array size cannot be zero!");
 
 public:
+	/*** C++ Standard Named Requirements for Containers ***/
+	typedef T 				value_type;
+	typedef std::size_t 	size_type;
+	typedef T& 				reference;
+	typedef const T&		const_reference;
+	typedef T*				iterator;
+	typedef const T*		const_iterator;
+	typedef T* 				pointer;
+	typedef const T*		const_pointer;
+	typedef ptrdiff_t		difference_type;
+
 	/*** Constructors and Destructors ***/
 	Array() noexcept = default;											// Default constructor
 
@@ -50,7 +62,7 @@ public:
 	Array(const Array<U, _SIZE>& copyArr);								// Copy constructor
 
 	template<class U>
-	Array(const U* const source, const std::size_t size);				// Construct with C-Style array of any type
+	Array(const U* const source, const size_type size);					// Construct with C-Style array of any type
 
 	template<class U>
 	Array(std::initializer_list<U> initializerList);					// Initializer_list constructor
@@ -58,24 +70,21 @@ public:
 	~Array() = default;
 
 	/*** Iterators ***/
-	using iterator 			= T*;
-	using const_iterator 	= const T*;
-
 	NODISCARD iterator begin() noexcept					{ return data; 			}
 	NODISCARD iterator end() noexcept					{ return data + SIZE; 	}
 	NODISCARD const_iterator cbegin() const noexcept	{ return data; 			}
 	NODISCARD const_iterator cend() const noexcept		{ return data + SIZE; 	}
 
 	/*** Operators ***/
-	NODISCARD const T& operator[](const std::size_t index) const 	{ return data[index]; }	// Subscript for non-assignable reference
-	NODISCARD T& operator[](const std::size_t index) 				{ return data[index]; }	// Subscript for assignable reference
+	NODISCARD const_reference operator[](const size_type index) const 	{ return data[index]; }	// Subscript for non-assignable reference
+	NODISCARD reference operator[](const size_type index) 				{ return data[index]; }	// Subscript for assignable reference
 
 	template<class U>	// Compare any kind of arrays
 	NODISCARD bool operator==(const Array<U, SIZE>& rightArr) const noexcept;
 	template<class U>	// Compare any kind of arrays by unequality
 	NODISCARD bool operator!=(const Array<U, SIZE>& rightArr) const noexcept;
 
-	template<class U, std::size_t _SIZE>	// Copy assignment operator
+	template<class U, size_type _SIZE>	// Copy assignment operator
 	Array& operator=(const Array<U, _SIZE>& copyArr);
 
 	/*** Operations ***/
@@ -83,7 +92,7 @@ public:
 	Array& Fill(const U& fillValue);
 
 	template<class U>
-	Array& Fill(const U& fillValue, const std::size_t startPos, const std::size_t endPos = SIZE);
+	Array& Fill(const U& fillValue, const size_type startPos, const size_type endPos = SIZE);
 
 	template<class U>
 	Array& Fill(const U& fillValue, iterator startPos, iterator endPos = end());
@@ -92,11 +101,11 @@ public:
 	Array& FillWithRule(const RuleT& predicate);
 
 	/*** Status Checkers ***/
-	NODISCARD constexpr std::size_t getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
-	NODISCARD constexpr std::size_t getSizeRaw() const noexcept		{ return SIZE * sizeof(T);	}	// Return actual size in bytes
+	NODISCARD constexpr size_type getSize() const noexcept		{ return SIZE;				}	// Returns total number of elements
+	NODISCARD constexpr size_type getSizeRaw() const noexcept		{ return SIZE * sizeof(T);	}	// Return actual size in bytes
 
 private:
-	T data[SIZE];
+	value_type data[SIZE];
 };
 
 /**
@@ -109,7 +118,7 @@ Array<T, SIZE>::Array(const U& fillValue)
 {
 	static_assert(std::is_assignable<T&, U>::value, "Cannot fill construct with the given types!");
 
-	for(T& element : *this)
+	for(reference element : *this)
 		element = fillValue;
 }
 
@@ -130,7 +139,7 @@ Array<T, SIZE>::Array(const Array<U, _SIZE>& copyArr)
 
 	typename Array<U, _SIZE>::const_iterator it = copyArr.cbegin();
 
-	for(T& element : *this)
+	for(reference element : *this)
 	{
 		element = *it;
 
@@ -149,13 +158,13 @@ Array<T, SIZE>::Array(const Array<U, _SIZE>& copyArr)
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>::Array(const U* const source, const std::size_t sourceSize)
+Array<T, SIZE>::Array(const U* const source, const size_type sourceSize)
 {
 	static_assert(std::is_assignable<T&, U>::value, "Cannot launch C-Style constructor with the given types!");
 
 	if(source != nullptr)
 	{
-		for(std::size_t index = 0; (index < SIZE) && (index < sourceSize); ++ index)
+		for(size_type index = 0; (index < SIZE) && (index < sourceSize); ++ index)
 			data[index] = source[index];
 	}
 }
@@ -170,7 +179,7 @@ Array<T, SIZE>::Array(std::initializer_list<U> initializerList)
 {
 	static_assert(std::is_assignable<T&, U>::value, "Cannot launch initializer list constructor with the given types!");
 
-	std::size_t index = 0;
+	size_type index = 0;
 	for(const U& element : initializerList)
 	{
 		data[index++] = element;
@@ -199,7 +208,7 @@ NODISCARD bool Array<T, SIZE>::operator==(const Array<U, SIZE>& rightArr) const 
 	/* Comparing with std::memcmp is not eligible because although the size of
 	 * individual elements might be unequal (e.g. double(8) and int(4)),
 	 * their values can be equal (e.g. int(65) = double(65.0))*/
-	for(const T& element : data)
+	for(const_reference element : data)
 	{
 		if(element != *itRight)
 			return false;
@@ -240,7 +249,7 @@ Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, _SIZE>& copyArr)
 
 	typename Array<U, SIZE>::const_iterator itRight = copyArr.cbegin();
 
-	for(T& element : *this)
+	for(reference element : *this)
 	{
 		element = *itRight;
 		++itRight;
@@ -260,7 +269,7 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue)
 {
 	static_assert(std::is_assignable<T&, U>::value, "Cannot fill the Array with the given type of values!");
 
-	for(T& element : *this)
+	for(reference element : *this)
 		element = fillValue;
 
 	return *this;
@@ -275,11 +284,11 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue)
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, const std::size_t startPos, const std::size_t endPos)
+Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, const size_type startPos, const size_type endPos)
 {
 	static_assert(std::is_assignable<T&, U>::value, "Cannot fill the Array with the given type of values!");
 
-	for(std::size_t index = startPos; (index < SIZE) && (index < endPos); ++index)
+	for(size_type index = startPos; (index < SIZE) && (index < endPos); ++index)
 		data[index] = fillValue;
 
 	return *this;
@@ -325,7 +334,7 @@ template<class T, std::size_t SIZE>
 template<class RuleT>
 Array<T, SIZE>& Array<T, SIZE>::FillWithRule(const RuleT& predicate)
 {
-	for(std::size_t index = 0; index < SIZE; ++index)
+	for(size_type index = 0; index < SIZE; ++index)
 		data[index] = predicate(index);
 
 	return *this;
