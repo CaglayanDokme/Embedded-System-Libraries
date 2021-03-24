@@ -42,8 +42,8 @@ class Array{
 
 public:
 	/*** C++ Standard Named Requirements for Containers ***/
-	typedef T 				value_type;
-	typedef std::size_t 	size_type;
+    typedef T               value_type;
+    typedef std::size_t     size_type;
 	typedef T& 				reference;
 	typedef const T&		const_reference;
 	typedef T*				iterator;
@@ -53,7 +53,7 @@ public:
 	typedef ptrdiff_t		difference_type;
 
 	/*** Constructors and Destructors ***/
-	Array() noexcept = default;											// Default constructor
+    Array() noexcept(std::is_nothrow_constructible<T>::value) = default;	// Default constructor
 
 	template<class U>	// Fill constructor
 	Array(const U& fillValue) noexcept(std::is_assignable<T&, U>::value);
