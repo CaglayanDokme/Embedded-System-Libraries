@@ -85,19 +85,19 @@ public:
 	NODISCARD bool operator!=(const Array<U, SIZE>& rightArr) const noexcept;
 
 	template<class U, size_type _SIZE>	// Copy assignment operator
-	Array& operator=(const Array<U, _SIZE>& copyArr);
+        Array& operator=(const Array<U, _SIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
 
 	/*** Operations ***/
 	Array& Swap(Array& swapArr) noexcept;
 
 	template<class U>
-	Array& Fill(const U& fillValue);
+        Array& Fill(const U& fillValue) noexcept(std::is_assignable<T&, U>::value);
 
 	template<class U>
-	Array& Fill(const U& fillValue, const size_type startPos, const size_type endPos = SIZE);
+        Array& Fill(const U& fillValue, const size_type startPos, const size_type endPos = SIZE) noexcept(std::is_assignable<T&, U>::value);
 
 	template<class U>
-	Array& Fill(const U& fillValue, iterator startPos, iterator endPos);
+        Array& Fill(const U& fillValue, iterator startPos, iterator endPos) noexcept(std::is_assignable<T&, U>::value);
 
 	template<class RuleT>
 	Array& FillWithRule(const RuleT& predicate);
