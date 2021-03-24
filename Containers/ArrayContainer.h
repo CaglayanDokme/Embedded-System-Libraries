@@ -58,8 +58,8 @@ public:
     template<class U>    // Fill constructor
     Array(const U& fillValue) noexcept(std::is_assignable<T&, U>::value);
 
-    template<class U, std::size_t _SIZE>    // Converting constructor
-    Array(const Array<U, _SIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
+    template<class U, std::size_t uSIZE>    // Converting constructor
+    Array(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
 
     template<class U>   // Construct with C-Style array of any type
     Array(const U* const source, const size_type size) noexcept(std::is_assignable<T&, U>::value);
@@ -84,8 +84,8 @@ public:
     template<class U>    // Compare any kind of arrays by unequality
     NODISCARD bool operator!=(const Array<U, SIZE>& rightArr) const noexcept;
 
-    template<class U, size_type _SIZE>    // Copy assignment operator
-        Array& operator=(const Array<U, _SIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
+    template<class U, size_type uSIZE>    // Copy assignment operator
+    Array& operator=(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
 
     /*** Operations ***/
     Array& Swap(Array& swapArr) noexcept;
@@ -103,7 +103,7 @@ public:
     Array& FillWithRule(const RuleT& predicate);
 
     /*** Status Checkers ***/
-    NODISCARD constexpr size_type max_size() const noexcept         { return SIZE;              }    // Return the maximum possible size
+    NODISCARD constexpr size_type maxSize() const noexcept          { return SIZE;              }    // Return the maximum possible size
     NODISCARD constexpr size_type size() const noexcept             { return SIZE;              }    // Returns total number of elements
     NODISCARD constexpr size_type sizeRaw() const noexcept          { return SIZE * sizeof(T);  }    // Return actual size in bytes
     NODISCARD constexpr bool empty() const noexcept                 { return (SIZE == 0);       }
@@ -134,10 +134,10 @@ Array<T, SIZE>::Array(const U& fillValue) noexcept(std::is_assignable<T&, U>::va
  *            It is the user's responsibility to consider etiher data or precision loss.
  */
 template<class T, std::size_t SIZE>
-template<class U, std::size_t _SIZE>
-Array<T, SIZE>::Array(const Array<U, _SIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value)
+template<class U, std::size_t uSIZE>
+Array<T, SIZE>::Array(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value)
 {
-    typename Array<U, _SIZE>::const_iterator it = copyArr.cbegin();
+    typename Array<U, uSIZE>::const_iterator it = copyArr.cbegin();
 
     for(reference element : *this)
     {
@@ -235,8 +235,8 @@ NODISCARD bool Array<T, SIZE>::operator!=(const Array<U, SIZE>& rightArr) const 
  * @return  lValue reference to the left array to support cascaded calls.
  */
 template<class T, std::size_t SIZE>
-template<class U, std::size_t _SIZE>
-Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, _SIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value)
+template<class U, std::size_t uSIZE>
+Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value)
 {
     if(this->cbegin() == reinterpret_cast<const_iterator>(copyArr.cbegin()))    // Check self copy
         return *this;
