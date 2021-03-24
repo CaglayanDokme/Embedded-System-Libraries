@@ -58,13 +58,13 @@ public:
     template<class U>    // Fill constructor
     Array(const U& fillValue) noexcept(std::is_assignable<T&, U>::value);
 
-    template<class U, std::size_t _SIZE> // Copy constructor
+    template<class U, std::size_t _SIZE>    // Converting constructor
     Array(const Array<U, _SIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
 
-    template<class U> // Construct with C-Style array of any type
+    template<class U>   // Construct with C-Style array of any type
     Array(const U* const source, const size_type size) noexcept(std::is_assignable<T&, U>::value);
 
-    template<class U> // Initializer_list constructor
+    template<class U>   // Initializer_list constructor
     Array(std::initializer_list<U> initializerList) noexcept(std::is_assignable<T&, U>::value);
 
     ~Array() = default;
