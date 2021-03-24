@@ -44,13 +44,13 @@ public:
     /*** C++ Standard Named Requirements for Containers ***/
     typedef T               value_type;
     typedef std::size_t     size_type;
-    typedef T&                 reference;
+    typedef T&              reference;
     typedef const T&        const_reference;
-    typedef T*                iterator;
+    typedef T*              iterator;
     typedef const T*        const_iterator;
-    typedef T*                 pointer;
+    typedef T*              pointer;
     typedef const T*        const_pointer;
-    typedef ptrdiff_t        difference_type;
+    typedef ptrdiff_t       difference_type;
 
     /*** Constructors and Destructors ***/
     Array() noexcept(std::is_nothrow_constructible<T>::value) = default;    // Default constructor
