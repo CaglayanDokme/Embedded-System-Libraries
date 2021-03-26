@@ -14,6 +14,7 @@
  *                             -> Rule based fill operation added.
  *              March 23, 2021 -> Type traits added to related functions.
  *                             -> Standard named requirements added to class.
+ *              March 26, 2021 -> Exception safety condition changed for assignments and swapping.
  *
  *  @note       Feel free to contact for questions, bugs, improvements or any other thing.
  *  @copyright  No copyright.
@@ -56,24 +57,24 @@ public:
     Array() noexcept(std::is_nothrow_constructible<T>::value) = default;    // Default constructor
 
     template<class U>    // Fill constructor
-    Array(const U& fillValue) noexcept(std::is_assignable<T&, U>::value);
+    Array(const U& fillValue) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     template<class U, std::size_t uSIZE>    // Converting constructor
-    Array(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
+    Array(const Array<U, uSIZE>& copyArr) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     template<class U>   // Construct with C-Style array of any type
-    Array(const U* const source, const size_type size) noexcept(std::is_assignable<T&, U>::value);
+    Array(const U* const source, const size_type size) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     template<class U>   // Initializer_list constructor
-    Array(std::initializer_list<U> initializerList) noexcept(std::is_assignable<T&, U>::value);
+    Array(std::initializer_list<U> initializerList) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     ~Array() = default;
 
     /*** Iterators ***/
-    NODISCARD iterator begin() noexcept                    { return data;             }
-    NODISCARD iterator end() noexcept                    { return data + SIZE;     }
-    NODISCARD const_iterator cbegin() const noexcept    { return data;             }
-    NODISCARD const_iterator cend() const noexcept        { return data + SIZE;     }
+    NODISCARD iterator begin() noexcept                 { return data;          }
+    NODISCARD iterator end() noexcept                   { return data + SIZE;   }
+    NODISCARD const_iterator cbegin() const noexcept    { return data;          }
+    NODISCARD const_iterator cend() const noexcept      { return data + SIZE;   }
 
     /*** Operators ***/
     NODISCARD const_reference operator[](const size_type index) const     { return data[index]; }    // Subscript for non-assignable reference
@@ -85,19 +86,19 @@ public:
     NODISCARD bool operator!=(const Array<U, SIZE>& rightArr) const noexcept;
 
     template<class U, size_type uSIZE>    // Copy assignment operator
-    Array& operator=(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value);
+    Array& operator=(const Array<U, uSIZE>& copyArr) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     /*** Operations ***/
-    Array& Swap(Array& swapArr) noexcept;
+    Array& Swap(Array& swapArr) noexcept(std::is_nothrow_swappable_v<T>);
 
     template<class U>
-    Array& Fill(const U& fillValue) noexcept(std::is_assignable<T&, U>::value);
+    Array& Fill(const U& fillValue) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     template<class U>
-    Array& Fill(const U& fillValue, const size_type startPos, const size_type endPos = SIZE) noexcept(std::is_assignable<T&, U>::value);
+    Array& Fill(const U& fillValue, const size_type startPos, const size_type endPos = SIZE) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     template<class U>
-    Array& Fill(const U& fillValue, iterator startPos, iterator endPos) noexcept(std::is_assignable<T&, U>::value);
+    Array& Fill(const U& fillValue, iterator startPos, iterator endPos) noexcept(std::is_nothrow_assignable_v<T&, U>);
 
     template<class RuleT>
     Array& FillWithRule(const RuleT& predicate);
@@ -118,7 +119,7 @@ private:
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>::Array(const U& fillValue) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>::Array(const U& fillValue) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     for(reference element : *this)
         element = fillValue;
@@ -135,7 +136,7 @@ Array<T, SIZE>::Array(const U& fillValue) noexcept(std::is_assignable<T&, U>::va
  */
 template<class T, std::size_t SIZE>
 template<class U, std::size_t uSIZE>
-Array<T, SIZE>::Array(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>::Array(const Array<U, uSIZE>& copyArr) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     typename Array<U, uSIZE>::const_iterator it = copyArr.cbegin();
 
@@ -158,7 +159,7 @@ Array<T, SIZE>::Array(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignabl
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>::Array(const U* const source, const size_type sourceSize) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>::Array(const U* const source, const size_type sourceSize) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     if(source != nullptr)
     {
@@ -173,7 +174,7 @@ Array<T, SIZE>::Array(const U* const source, const size_type sourceSize) noexcep
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>::Array(std::initializer_list<U> initializerList) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>::Array(std::initializer_list<U> initializerList) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     size_type index = 0;
     for(const U& element : initializerList)
@@ -236,7 +237,7 @@ NODISCARD bool Array<T, SIZE>::operator!=(const Array<U, SIZE>& rightArr) const 
  */
 template<class T, std::size_t SIZE>
 template<class U, std::size_t uSIZE>
-Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, uSIZE>& copyArr) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, uSIZE>& copyArr) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     if(this->cbegin() == reinterpret_cast<const_iterator>(copyArr.cbegin()))    // Check self copy
         return *this;
@@ -258,7 +259,7 @@ Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, uSIZE>& copyArr) noexce
  * @return  lValue reference to the left array to support cascaded calls.
  */
 template<class T, std::size_t SIZE>
-Array<T, SIZE>& Array<T, SIZE>::Swap(Array<T, SIZE>& swapArr) noexcept
+Array<T, SIZE>& Array<T, SIZE>::Swap(Array<T, SIZE>& swapArr) noexcept(std::is_nothrow_swappable_v<T>)
 {
     if(&swapArr == this)        // Self swap control
         return *this;
@@ -283,7 +284,7 @@ Array<T, SIZE>& Array<T, SIZE>::Swap(Array<T, SIZE>& swapArr) noexcept
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     for(reference element : *this)
         element = fillValue;
@@ -300,7 +301,7 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue) noexcept(std::is_assign
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, const size_type startPos, const size_type endPos) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, const size_type startPos, const size_type endPos) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     for(size_type index = startPos; (index < SIZE) && (index < endPos); ++index)
         data[index] = fillValue;
@@ -317,7 +318,7 @@ Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, const size_type startPo
  */
 template<class T, std::size_t SIZE>
 template<class U>
-Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, iterator startPos, iterator endPos) noexcept(std::is_assignable<T&, U>::value)
+Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, iterator startPos, iterator endPos) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
     if((startPos < begin()) || (startPos > end()))    // Manual address input might violate the address range
         return *this;
