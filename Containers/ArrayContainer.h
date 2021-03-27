@@ -247,7 +247,9 @@ Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, uSIZE>& copyArr) noexce
     for(reference element : *this)
     {
         element = *itRight;
-        ++itRight;
+
+        if(++itRight == copyArr.cend())
+            break;
     }
 
     return *this;
