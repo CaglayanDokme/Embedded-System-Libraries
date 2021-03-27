@@ -329,7 +329,7 @@ template<class T, std::size_t SIZE>
 template<class U>
 Array<T, SIZE>& Array<T, SIZE>::Fill(const U& fillValue, iterator startPos, iterator endPos) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
-    if((startPos < begin()) || (startPos > end()))    // Manual address input might violate the address range
+    if((startPos < begin()) || (startPos >= end()))    // Manual address input might violate the address range
         return *this;
 
     if(startPos >= endPos)
