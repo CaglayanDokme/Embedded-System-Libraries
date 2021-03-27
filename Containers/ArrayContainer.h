@@ -28,6 +28,7 @@
 #include <cstddef>                  // For size_t
 #include <initializer_list>         // For initializer_list constructor
 #include <type_traits>              // For compile time controls
+#include <cassert>                  // For assertions
 
 /** Special definitions **/
 #if __cplusplus >= 201703l          // If the C++ version is greater or equal to 2017xx
@@ -70,11 +71,14 @@ public:
 
     ~Array() = default;
 
-    /*** Iterators ***/
+    /*** Element Access ***/
     NODISCARD iterator begin() noexcept                 { return data;          }
     NODISCARD iterator end() noexcept                   { return data + SIZE;   }
     NODISCARD const_iterator cbegin() const noexcept    { return data;          }
     NODISCARD const_iterator cend() const noexcept      { return data + SIZE;   }
+
+    NODISCARD reference at(const size_type position)                { assert(position >= SIZE); return data[position]; }
+    NODISCARD const_reference at(const size_type position) const    { assert(position >= SIZE); return data[position]; }
 
     /*** Operators ***/
     NODISCARD const_reference operator[](const size_type index) const     { return data[index]; }    // Subscript for non-assignable reference
