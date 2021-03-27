@@ -201,7 +201,7 @@ template<class T, std::size_t SIZE>
 template<class U>
 NODISCARD bool Array<T, SIZE>::operator==(const Array<U, SIZE>& rightArr) const noexcept
 {
-    if(this->cbegin() == reinterpret_cast<const_iterator>(rightArr.cbegin()))    // Self comparison
+    if(static_cast<const void *>(this) == static_cast<const void *>(&rightArr))    // Self comparison
         return true;
 
     typename Array<U, SIZE>::const_iterator itRight = rightArr.cbegin();
@@ -243,7 +243,7 @@ template<class T, std::size_t SIZE>
 template<class U, std::size_t uSIZE>
 Array<T, SIZE>& Array<T, SIZE>::operator=(const Array<U, uSIZE>& copyArr) noexcept(std::is_nothrow_assignable_v<T&, U>)
 {
-    if(this->cbegin() == reinterpret_cast<const_iterator>(copyArr.cbegin()))    // Check self copy
+    if(static_cast<const void *>(this) == static_cast<const void *>(&copyArr))    // Check self copy
         return *this;
 
     typename Array<U, SIZE>::const_iterator itRight = copyArr.cbegin();
