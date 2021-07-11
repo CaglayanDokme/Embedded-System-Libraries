@@ -8,7 +8,8 @@
  *                              -> Data buffer replaced with uint8_t array to support
  *                                 data types without default constructor.
  *                              -> Default size parameter removed from template arguments
- *              July 11, 2021   -> Index incrementor method optimized, mod operation removed.
+ *              July 11, 2021   -> Index incrementor method optimized, mod operation removed
+ * .
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
  */
@@ -56,11 +57,11 @@ public:
     NODISCARD reference       back();
 
     /*** Modifiers ***/
-    void push(const value_type& value);
-    void push(value_type&& value);
-
     template <class... Args>
-    void emplace(Args&&... args);
+    NODISCARD bool emplace(Args&&... args);
+    NODISCARD bool push(const value_type& value);
+    NODISCARD bool push(value_type&& value);
+
     void pop();
     void swap(Queue& swapQ);
 
@@ -151,13 +152,44 @@ T& Queue<T, SIZE>::back()
 }
 
 /**
+ * @brief   Pushes the element by constructing it in-place with the given arguments
+ * @param   args  Arguments to be forwarded to the constructor of the new element
+ * @note    Overwrites the oldest element in the Queue.
+ */
+template<class T, std::size_t SIZE>
+template <class... Args>
+bool Queue<T, SIZE>::emplace(Args&&... args)
+{
+    if(full())
+        return false;
+
+    // Adjust back index
+    IncrementIndex(idxBack);
+
+    // In-place construct element with the arguments at the back
+    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::forward(args...));
+
+    // Adjust front index
+    if(full())  // Queue may be full, overwrite the oldest element
+        IncrementIndex(idxFront);
+
+    // Adjust size
+    sz += full() ? 0 : 1;
+
+    return true;
+}
+
+/**
  * @brief   Pushes the element to the Queue
  * @param   value   Constant lValue reference to the object to be pushed
  * @note    Overwrites the oldest element in the Queue.
  */
 template<class T, std::size_t SIZE>
-void Queue<T, SIZE>::push(const value_type& value)
+bool Queue<T, SIZE>::push(const value_type& value)
 {
+    if(full())
+        return false;
+
     // Adjust back index
     IncrementIndex(idxBack);
 
@@ -165,11 +197,13 @@ void Queue<T, SIZE>::push(const value_type& value)
     new(reinterpret_cast<value_type*>(data) + idxBack) value_type(value);
 
     // Adjust front index
-    if(full() == true)  // Queue may be full, overwrite the oldest element
+    if(full())  // Queue may be full, overwrite the oldest element
         IncrementIndex(idxFront);
 
     // Adjust size
     sz += full() ? 0 : 1;
+
+    return true;
 }
 
 /**
@@ -178,8 +212,11 @@ void Queue<T, SIZE>::push(const value_type& value)
  * @note    Overwrites the oldest element in the Queue.
  */
 template<class T, std::size_t SIZE>
-void Queue<T, SIZE>::push(value_type&& value)
+bool Queue<T, SIZE>::push(value_type&& value)
 {
+    if(full())
+        return false;
+
     // Adjust back index
     IncrementIndex(idxBack);
 
@@ -187,34 +224,13 @@ void Queue<T, SIZE>::push(value_type&& value)
     new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::move(value));
 
     // Adjust front index
-    if(full() == true)  // Queue may be full, overwrite the oldest element
+    if(full())  // Queue may be full, overwrite the oldest element
         IncrementIndex(idxFront);
 
     // Adjust size
     sz += full() ? 0 : 1;
-}
 
-/**
- * @brief   Pushes the element by constructing it in-place with the given arguments
- * @param   args  Arguments to be forwarded to the constructor of the new element
- * @note    Overwrites the oldest element in the Queue.
- */
-template<class T, std::size_t SIZE>
-template <class... Args>
-void Queue<T, SIZE>::emplace(Args&&... args)
-{
-    // Adjust back index
-    IncrementIndex(idxBack);
-
-    // In-place construct element with the arguments at the back
-    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::forward(args...));
-
-    // Adjust front index
-    if(full() == true)  // Queue may be full, overwrite the oldest element
-        IncrementIndex(idxFront);
-
-    // Adjust size
-    sz += full() ? 0 : 1;
+    return true;
 }
 
 /**
