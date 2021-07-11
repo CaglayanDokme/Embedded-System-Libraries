@@ -4,6 +4,8 @@
  *              The contatiner is implemented without any dynamic allocation feature.
  * @author      Caglayan DOKME, caglayandokme@gmail.com
  * @date        July 10, 2021 -> First release
+ *              July 11, 2021 -> Data buffer replaced with uint8_t array to support
+ *                               data types without default constructor.
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
  */
@@ -14,6 +16,7 @@
 /*** Libraries ***/
 #include <cstddef>  // std::size_t
 #include <utility>  // std::move, std::swap
+#include <cstdint>  // std::uint8_t
 
 /*** Special definitions ***/
 // If the C++ version is greater or equal to 2017xx
@@ -24,7 +27,7 @@
 #endif
 
 /*** Container Class ***/
-template<class T, std::size_t SIZE = 128>
+template<class T, std::size_t SIZE>
 class Stack{
 public:
     /*** C++ Standard Named Requirements for Containers ***/
@@ -48,11 +51,10 @@ public:
     NODISCARD reference       top();
 
     /*** Modifiers ***/
-    void push(const value_type& value);
-    void push(value_type&& value);
-
     template <class... Args>
-    void emplace(Args&&... args);
+    bool emplace(Args&&... args);
+    bool push(const value_type& value);
+    bool push(value_type&& value);
     void pop();
     void swap(Stack& swapStack);
 
@@ -63,9 +65,9 @@ public:
 
 private:
     /*** Members ***/
-    size_type  sz;          // General size
-    size_type  idxTop;      // Index after the top element
-    value_type data[SIZE];  // Contained data
+    size_type    sz;          // General size
+    size_type    idxTop;      // Index after the top element
+    std::uint8_t data[SIZE * sizeof(T)];  // Contained data
 };
 
 /**
@@ -86,8 +88,9 @@ Stack<T, SIZE>::Stack(const Stack& copyStack)
 {
     if(copyStack.empty() == false)
     {
+        // Copy construct each element
         for(size_type elemIdx = 0; elemIdx < copyStack.sz; ++elemIdx)
-            data[elemIdx] = copyStack.data[elemIdx];
+            new(reinterpret_cast<value_type*>(data) + elemIdx) value_type(copyStack.data[elemIdx]);
 
         idxTop  = copyStack.idxTop;
         sz      = copyStack.sz;
@@ -101,7 +104,10 @@ Stack<T, SIZE>::Stack(const Stack& copyStack)
 template<class T, std::size_t SIZE>
 const T& Stack<T, SIZE>::top() const
 {
-    return data[idxTop-1];
+    if(empty())
+        return reinterpret_cast<value_type*>(data)[0];
+
+    return reinterpret_cast<value_type*>(data)[idxTop-1];
 }
 
 /**
@@ -111,10 +117,10 @@ const T& Stack<T, SIZE>::top() const
 template<class T, std::size_t SIZE>
 T& Stack<T, SIZE>::top()
 {
-    if(empty() == true)
-        return data[0];
+    if(empty())
+        return reinterpret_cast<value_type*>(data)[0];
 
-    return data[idxTop-1];
+    return reinterpret_cast<value_type*>(data)[idxTop-1];
 }
 
 /**
@@ -122,31 +128,27 @@ T& Stack<T, SIZE>::top()
  * @param value     Reference to the value to be copied
  */
 template<class T, std::size_t SIZE>
-void Stack<T, SIZE>::push(const value_type& value)
+bool Stack<T, SIZE>::push(const value_type& value)
 {
-    if(full() == true)
-        return;
+    if(full())
+        return false;
 
-    data[idxTop] = value;
+    new(reinterpret_cast<value_type*>(data) + idxTop) value_type(value);
 
     ++idxTop;
     ++sz;
+
+    return true;
 }
 
 /**
  * @brief Pushes the given element to the top of the Stack
- * @param value     rValue Reference to the value to be moveds
+ * @param value     rValue Reference to the value to be moved
  */
 template<class T, std::size_t SIZE>
-void Stack<T, SIZE>::push(value_type&& value)
+bool Stack<T, SIZE>::push(value_type&& value)
 {
-    if(full() == true)
-        return;
-
-    data[idxTop] = std::move(value);
-
-    ++idxTop;
-    ++sz;
+    return emplace(std::move(value));
 }
 
 /**
@@ -155,15 +157,17 @@ void Stack<T, SIZE>::push(value_type&& value)
  */
 template<class T, std::size_t SIZE>
 template <class... Args>
-void Stack<T, SIZE>::emplace(Args&&... args)
+bool Stack<T, SIZE>::emplace(Args&&... args)
 {
-    if(full() == true)
-        return;
+    if(full())
+        return false;
 
-    data[idxTop] = std::forward(args...);
+    new(reinterpret_cast<value_type*>(data) + idxTop) value_type(std::forward<Args>(args)...);
 
     ++idxTop;
     ++sz;
+
+    return true;
 }
 
 /**
@@ -172,8 +176,11 @@ void Stack<T, SIZE>::emplace(Args&&... args)
 template<class T, std::size_t SIZE>
 void Stack<T, SIZE>::pop()
 {
-    if(empty() == true)
+    if(empty())
         return;
+
+    // Explicitly call the destructor as we used the placement new
+    reinterpret_cast<value_type*>(data)[idxTop-1].~value_type();
 
     --idxTop;
     --sz;
