@@ -167,7 +167,7 @@ bool Queue<T, SIZE>::emplace(Args&&... args)
     IncrementIndex(idxBack);
 
     // In-place construct element with the arguments at the back
-    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::forward(args...));
+    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::forward<Args>(args)...);
 
     // Adjust front index
     if(full())  // Queue may be full, overwrite the oldest element
@@ -241,6 +241,9 @@ void Queue<T, SIZE>::pop()
 {
     if(empty() == false)
     {
+        // Explicitly call the destructor as we used the placement new
+        reinterpret_cast<value_type*>(data)[idxFront].~value_type();
+
         IncrementIndex(idxFront);
 
         // Decrement size
