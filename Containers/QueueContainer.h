@@ -8,6 +8,7 @@
  *                              -> Data buffer replaced with uint8_t array to support
  *                                 data types without default constructor.
  *                              -> Default size parameter removed from template arguments
+ *              July 11, 2021   -> Index incrementor method optimized, mod operation removed.
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
  */
@@ -75,7 +76,11 @@ private:
     size_type    idxBack;     // Index of the back element
     std::uint8_t data[SIZE * sizeof(T)];  // Contained data
 
-    void IncrementIndex(size_type& index) { index = (index + 1) % SIZE; }
+    /*** Helper functions ***/
+    void IncrementIndex(size_type& index) // Increments the index by not violating the range
+    {
+        index = (SIZE-1 == index) ? 0 : index+1;
+    }
 };
 
 /**
