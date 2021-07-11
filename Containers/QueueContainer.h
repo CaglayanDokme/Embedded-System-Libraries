@@ -222,23 +222,7 @@ bool Queue<T, SIZE>::push(const value_type& value)
 template<class T, std::size_t SIZE>
 bool Queue<T, SIZE>::push(value_type&& value)
 {
-    if(full())
-        return false;
-
-    // Adjust back index
-    IncrementIndex(idxBack);
-
-    // Move construct element at the backs
-    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::move(value));
-
-    // Adjust front index
-    if(full())  // Queue may be full, overwrite the oldest element
-        IncrementIndex(idxFront);
-
-    // Adjust size
-    sz += full() ? 0 : 1;
-
-    return true;
+    return emplace(std::move(value));
 }
 
 /**
