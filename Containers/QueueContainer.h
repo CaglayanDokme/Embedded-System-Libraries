@@ -70,6 +70,11 @@ public:
     NODISCARD bool        full()  const { return (SIZE  == sz); }
     NODISCARD size_type   size()  const { return sz;            }
 
+    /*** Operators ***/
+    bool operator==(const Queue& compQ) const;  // Comparison operator
+    bool operator!=(const Queue& compQ) const;  // Incomparison operator
+    Queue& operator=(const Queue& sourceQ);     // Copy assignment operator
+
 private:
     /*** Members ***/
     size_type    sz;          // General size
@@ -112,7 +117,7 @@ Queue<T,SIZE>::Queue(const Queue& copyQ)
 }
 
 /**
- * @brief   Returns a constant reference to the front element of Queue
+ * @brief   Returns a constant lValue reference to the front element of Queue
  * @return  Constant lValue reference to the front element
  */
 template<class T, std::size_t SIZE>
@@ -122,7 +127,7 @@ const T& Queue<T, SIZE>::front() const
 }
 
 /**
- * @brief   Returns a reference to the front element of Queue
+ * @brief   Returns an lValue reference to the front element of Queue
  * @return  lValue reference to the front element
  */
 template<class T, std::size_t SIZE>
@@ -132,7 +137,7 @@ T& Queue<T, SIZE>::front()
 }
 
 /**
- * @brief   Returns a constant reference to the back element of Queue
+ * @brief   Returns a constant lValue reference to the back element of Queue
  * @return  Constant lValue reference to the back element
  */
 template<class T, std::size_t SIZE>
@@ -142,7 +147,7 @@ const T& Queue<T, SIZE>::back() const
 }
 
 /**
- * @brief   Returns a reference to the back element of Queue
+ * @brief   Returns an lValue reference to the back element of Queue
  * @return  lValue reference to the back element
  */
 template<class T, std::size_t SIZE>
@@ -154,7 +159,8 @@ T& Queue<T, SIZE>::back()
 /**
  * @brief   Pushes the element by constructing it in-place with the given arguments
  * @param   args  Arguments to be forwarded to the constructor of the new element
- * @note    Overwrites the oldest element in the Queue.
+ * @return  true    If the operation is successful.
+ *          false   If the queue was full
  */
 template<class T, std::size_t SIZE>
 template <class... Args>
@@ -182,7 +188,8 @@ bool Queue<T, SIZE>::emplace(Args&&... args)
 /**
  * @brief   Pushes the element to the Queue
  * @param   value   Constant lValue reference to the object to be pushed
- * @note    Overwrites the oldest element in the Queue.
+ * @return  true    If the operation is successful.
+ *          false   If the queue was full
  */
 template<class T, std::size_t SIZE>
 bool Queue<T, SIZE>::push(const value_type& value)
@@ -209,7 +216,8 @@ bool Queue<T, SIZE>::push(const value_type& value)
 /**
  * @brief   Pushes the element to the Queue
  * @param   value   rValue reference to the object to be pushed
- * @note    Overwrites the oldest element in the Queue.
+ * @return  true    If the operation is successful.
+ *          false   If the queue was full
  */
 template<class T, std::size_t SIZE>
 bool Queue<T, SIZE>::push(value_type&& value)
@@ -234,7 +242,8 @@ bool Queue<T, SIZE>::push(value_type&& value)
 }
 
 /**
- * @brief Pops the front element of the Queue
+ * @brief   Pops the front element of the Queue
+ * @note    Explicitly calls the destructor of the element
  */
 template<class T, std::size_t SIZE>
 void Queue<T, SIZE>::pop()
@@ -265,4 +274,68 @@ void Queue<T, SIZE>::swap(Queue& swapQ)
         std::swap(idxFront, swapQ.idxFront);
         std::swap(sz,       swapQ.sz);
     }
+}
+
+/**
+ * @brief   Comparison operator
+ * @param   compQ   Queue to be compared with.
+ * @return  true    If both Queues are equal.
+ */
+template<class T, std::size_t SIZE>
+bool Queue<T, SIZE>::operator==(const Queue& compQ) const
+{
+    if(compQ.size() != sz)  // Size must be equal
+        return false;
+
+    // Element-wise comparison
+    size_type index0 = idxFront, index1 = compQ.idxFront;
+    for(size_type elemIdx = 0; elemIdx < compQ.size(); ++elemIdx)
+    {
+        if(compQ.data[index1] != data[index0])
+            return false;
+
+        IncrementIndex(index0);
+        IncrementIndex(index1);
+    }
+
+    // Queues are equal if the function reaches here
+    return true;
+}
+
+/**
+ * @brief   Incomparison operator
+ * @param   compQ   Queue to be compared with.
+ * @return  true    If Queues are not equal.
+ */
+template<class T, std::size_t SIZE>
+bool Queue<T, SIZE>::operator!=(const Queue& compQ) const
+{
+    return !(compQ == *this);
+}
+
+/**
+ * @brief   Copy assignment operator
+ * @param   sourceQ     Queue to bed copied from
+ * @return  lValue reference to the left Queue to support cascaded operations
+ */
+template<class T, std::size_t SIZE>
+Queue<T, SIZE>& Queue<T, SIZE>::operator=(const Queue& sourceQ)
+{
+    // Pop all elements first
+    while(!empty())
+        pop();
+
+    if(sourceQ.empty() == false)
+    {
+        // Copy construct each element
+        size_type sourceIdx = sourceQ.idxFront;
+        for(size_type elemIdx = 0; elemIdx < sourceQ.sz; ++elemIdx, IncrementIndex(sourceIdx))
+            new(reinterpret_cast<value_type*>(data) + elemIdx) value_type(sourceQ.data[sourceIdx]);
+
+        idxFront    = 0;
+        idxBack     = sourceQ.sz - 1;
+        sz          = sourceQ.sz;
+    }
+
+    return *this;
 }
