@@ -5,6 +5,9 @@
  * @author      Caglayan DOKME, caglayandokme@gmail.com
  * @date        July 9, 2021    -> First release
  *              July 10, 2021   -> Doxygen added. Copy constructor added.
+ *                              -> Data buffer replaced with uint8_t array to support
+ *                                 data types without default constructor.
+ *                              -> Default size parameter removed from template arguments
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
  */
@@ -15,6 +18,7 @@
 /*** Libraries ***/
 #include <cstddef>  // std::size_t
 #include <utility>  // std::move, std::swap
+#include <cstdint>  // std::uint8_t
 
 /*** Special definitions ***/
 // If the C++ version is greater or equal to 2017xx
@@ -25,7 +29,7 @@
 #endif
 
 /*** Container Class ***/
-template<class T, std::size_t SIZE = 128>
+template<class T, std::size_t SIZE>
 class Queue{
 public:
     /*** C++ Standard Named Requirements for Containers ***/
@@ -66,10 +70,10 @@ public:
 
 private:
     /*** Members ***/
-    size_type  sz;          // General size
-    size_type  idxFront;    // Index of the front element
-    size_type  idxBack;     // Index of the back element
-    value_type data[SIZE];  // Contained data
+    size_type    sz;          // General size
+    size_type    idxFront;    // Index of the front element
+    size_type    idxBack;     // Index of the back element
+    std::uint8_t data[SIZE * sizeof(T)];  // Contained data
 
     void IncrementIndex(size_type& index) { index = (index + 1) % SIZE; }
 };
@@ -91,8 +95,9 @@ Queue<T,SIZE>::Queue(const Queue& copyQ)
 {
     if(copyQ.empty() == false)
     {
+        // Copy construct each element
         for(size_type elemIdx = 0; elemIdx < copyQ.sz; ++elemIdx)
-            data[elemIdx] = copyQ.data[(copyQ.idxFront + elemIdx) % SIZE];
+            new(reinterpret_cast<value_type*>(data) + elemIdx) value_type(copyQ.data[(copyQ.idxFront + elemIdx) % SIZE]);
 
         idxFront    = 0;
         idxBack     = copyQ.sz - 1;
@@ -107,7 +112,7 @@ Queue<T,SIZE>::Queue(const Queue& copyQ)
 template<class T, std::size_t SIZE>
 const T& Queue<T, SIZE>::front() const
 {
-    return data[idxFront];
+    return reinterpret_cast<value_type*>(data)[idxFront];
 }
 
 /**
@@ -117,7 +122,7 @@ const T& Queue<T, SIZE>::front() const
 template<class T, std::size_t SIZE>
 T& Queue<T, SIZE>::front()
 {
-    return data[idxFront];
+    return reinterpret_cast<value_type*>(data)[idxFront];
 }
 
 /**
@@ -127,7 +132,7 @@ T& Queue<T, SIZE>::front()
 template<class T, std::size_t SIZE>
 const T& Queue<T, SIZE>::back() const
 {
-    return data[idxBack];
+    return reinterpret_cast<value_type*>(data)[idxFront];
 }
 
 /**
@@ -137,7 +142,7 @@ const T& Queue<T, SIZE>::back() const
 template<class T, std::size_t SIZE>
 T& Queue<T, SIZE>::back()
 {
-    return data[idxBack];
+    return reinterpret_cast<value_type*>(data)[idxFront];
 }
 
 /**
@@ -151,8 +156,8 @@ void Queue<T, SIZE>::push(const value_type& value)
     // Adjust back index
     IncrementIndex(idxBack);
 
-    // Copy value
-    data[idxBack] = value;
+    // Copy construct element at the back
+    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(value);
 
     // Adjust front index
     if(full() == true)  // Queue may be full, overwrite the oldest element
@@ -173,8 +178,8 @@ void Queue<T, SIZE>::push(value_type&& value)
     // Adjust back index
     IncrementIndex(idxBack);
 
-    // Copy value
-    data[idxBack] = std::move(value);
+    // Move construct element at the backs
+    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::move(value));
 
     // Adjust front index
     if(full() == true)  // Queue may be full, overwrite the oldest element
@@ -196,8 +201,8 @@ void Queue<T, SIZE>::emplace(Args&&... args)
     // Adjust back index
     IncrementIndex(idxBack);
 
-    // Copy value
-    data[idxBack] = std::forward(args...);
+    // In-place construct element with the arguments at the back
+    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::forward(args...));
 
     // Adjust front index
     if(full() == true)  // Queue may be full, overwrite the oldest element
