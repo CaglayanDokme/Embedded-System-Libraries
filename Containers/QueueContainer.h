@@ -47,7 +47,7 @@ public:
     using const_iterator    = const T*;
     using difference_type   = std::ptrdiff_t;
     using size_type         = std::size_t;
-    using aligned_data      = typename std::aligned_storage<sizeof(T), alignof(std::uint32_t)>::type;
+    using aligned_data      = typename std::aligned_storage<sizeof(T), alignof(T)>::type;
 
     /*** Constructors and Destructor ***/
     // Default constructor
