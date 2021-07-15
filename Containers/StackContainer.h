@@ -209,12 +209,12 @@ void Stack<T, SIZE>::swap(Stack& swapStack)
 }
 
 /**
- * @brief operator ==
- * @param compQ
- * @return
+ * @brief   Comparison operator
+ * @param   compQ   Stack to be compared with.
+ * @return  true    If both Stacks are equal.
  */
 template<class T, std::size_t SIZE>
-bool Stack<T, SIZE>::operator==(const Stack& compStack) const  // Comparison operator
+bool Stack<T, SIZE>::operator==(const Stack& compStack) const
 {
     if(compStack.sz != sz)
         return false;
@@ -227,23 +227,23 @@ bool Stack<T, SIZE>::operator==(const Stack& compStack) const  // Comparison ope
 }
 
 /**
- * @brief operator !=
- * @param compQ
- * @return
+ * @brief   Incomparison operator
+ * @param   compQ   Stack to be compared with.
+ * @return  true    If Stacks are not equal.
  */
 template<class T, std::size_t SIZE>
-bool Stack<T, SIZE>::operator!=(const Stack& compStack) const  // Incomparison operator
+bool Stack<T, SIZE>::operator!=(const Stack& compStack) const
 {
     return !(*this == compStack);
 }
 
 /**
- * @brief operator =
- * @param sourceQ
- * @return
+ * @brief   Copy assignment operator
+ * @param   sourceStack     Stack to be copied from
+ * @return  lValue reference to the left Stack to support cascaded operations
  */
 template<class T, std::size_t SIZE>
-Stack<T, SIZE>& Stack<T, SIZE>::operator=(const Stack& sourceStack)     // Copy assignment operator
+Stack<T, SIZE>& Stack<T, SIZE>::operator=(const Stack& sourceStack)
 {
     while(!empty())
         pop();
