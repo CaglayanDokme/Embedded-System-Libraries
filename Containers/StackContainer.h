@@ -6,6 +6,9 @@
  * @date        July 10, 2021 -> First release
  *              July 11, 2021 -> Data buffer replaced with uint8_t array to support
  *                               data types without default constructor.
+ *              July 15, 2021 -> Data storage replaced with std::aligned_storage
+ *                               capacity() method added.
+ *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
  */
@@ -40,7 +43,7 @@ public:
     using const_iterator    = const T*;
     using difference_type   = std::ptrdiff_t;
     using size_type         = std::size_t;
-    //using aligned_data      = typename std::aligned_storage<sizeof(T), alignof(std::uint32_t)>::type;
+    using aligned_data      = typename std::aligned_storage<sizeof(T), alignof(T)>::type;
 
     /*** Constructors and Destructor ***/
     // Default constructor
@@ -61,6 +64,11 @@ public:
     void pop();
     void swap(Stack& swapStack);
 
+    /*** Operators ***/
+    bool operator==(const Stack& compQ) const;  // Comparison operator
+    bool operator!=(const Stack& compQ) const;  // Incomparison operator
+    Stack& operator=(const Stack& sourceQ);     // Copy assignment operator
+
     /*** Status Checkers ***/
     NODISCARD bool      empty()    const { return (0     == sz); }
     NODISCARD bool      full()     const { return (SIZE  == sz); }
@@ -71,7 +79,7 @@ private:
     /*** Members ***/
     size_type    sz;          // General size
     size_type    idxTop;      // Index after the top element
-    std::uint8_t data[SIZE * sizeof(T)];  // Contained data
+    aligned_data data[SIZE];  // Contained data
 };
 
 /**
@@ -90,46 +98,41 @@ template<class T, std::size_t SIZE>
 Stack<T, SIZE>::Stack(const Stack& copyStack)
     : sz(0), idxTop(0)
 {
-    if(copyStack.empty() == false)
-    {
-        // Copy construct each element
-        for(size_type elemIdx = 0; elemIdx < copyStack.sz; ++elemIdx)
-            new(reinterpret_cast<value_type*>(data) + elemIdx) value_type(copyStack.data[elemIdx]);
-
-        idxTop  = copyStack.idxTop;
-        sz      = copyStack.sz;
-    }
+    *this = copyStack;
 }
 
 /**
  * @brief   Returns a constant reference to the top element of the Stack
  * @return  Constant lValue reference to the front element
+ * @note    The referenced data is not valid if the Stack is empty
  */
 template<class T, std::size_t SIZE>
 const T& Stack<T, SIZE>::top() const
 {
     if(empty())
-        return reinterpret_cast<value_type*>(data)[0];
+        return reinterpret_cast<const_reference>(data[0]);
 
-    return reinterpret_cast<value_type*>(data)[idxTop-1];
+    return reinterpret_cast<const_reference>(data[idxTop-1]);
 }
 
 /**
  * @brief   Returns a reference to the top element of the Stack
  * @return  lValue reference to the front element
+ * @note    The referenced data is not valid if the Stack is empty
  */
 template<class T, std::size_t SIZE>
 T& Stack<T, SIZE>::top()
 {
     if(empty())
-        return reinterpret_cast<value_type*>(data)[0];
+        return reinterpret_cast<reference>(data[0]);
 
-    return reinterpret_cast<value_type*>(data)[idxTop-1];
+    return reinterpret_cast<reference>(data[idxTop-1]);
 }
 
 /**
- * @brief Pushes the given element to the top of the Stack
- * @param value     Reference to the value to be copied
+ * @brief   Pushes the given element to the top of the Stack
+ * @param   value   Reference to the value to be copied
+ * @return  true    If the element is pushed successfully
  */
 template<class T, std::size_t SIZE>
 bool Stack<T, SIZE>::push(const value_type& value)
@@ -137,7 +140,8 @@ bool Stack<T, SIZE>::push(const value_type& value)
     if(full())
         return false;
 
-    new(reinterpret_cast<value_type*>(data) + idxTop) value_type(value);
+    // Copy construct element at the top
+    new(data + idxTop) value_type(value);
 
     ++idxTop;
     ++sz;
@@ -146,8 +150,9 @@ bool Stack<T, SIZE>::push(const value_type& value)
 }
 
 /**
- * @brief Pushes the given element to the top of the Stack
- * @param value     rValue Reference to the value to be moved
+ * @brief   Pushes the given element to the top of the Stack
+ * @param   value   rValue Reference to the value to be moved
+ * @return  true    If the element is pushed successfully
  */
 template<class T, std::size_t SIZE>
 bool Stack<T, SIZE>::push(value_type&& value)
@@ -156,8 +161,9 @@ bool Stack<T, SIZE>::push(value_type&& value)
 }
 
 /**
- * @brief Pushes the given element to the top of the Stack by constructing it in-place
- * @param value     Arguments for constructing the new element
+ * @brief   Pushes the given element to the top of the Stack by constructing it in-place
+ * @param   value   Arguments for constructing the new element
+ * @return  true    If the element is pushed successfully
  */
 template<class T, std::size_t SIZE>
 template <class... Args>
@@ -166,7 +172,7 @@ bool Stack<T, SIZE>::emplace(Args&&... args)
     if(full())
         return false;
 
-    new(reinterpret_cast<value_type*>(data) + idxTop) value_type(std::forward<Args>(args)...);
+    new(data + idxTop) value_type(std::forward<Args>(args)...);
 
     ++idxTop;
     ++sz;
@@ -184,7 +190,7 @@ void Stack<T, SIZE>::pop()
         return;
 
     // Explicitly call the destructor as we used the placement new
-    reinterpret_cast<value_type*>(data)[idxTop-1].~value_type();
+    reinterpret_cast<reference>(data[idxTop-1]).~value_type();
 
     --idxTop;
     --sz;
@@ -200,4 +206,56 @@ void Stack<T, SIZE>::swap(Stack& swapStack)
     std::swap(sz,       swapStack.sz);
     std::swap(idxTop,   swapStack.idxTop);
     std::swap(data,     swapStack.data);
+}
+
+/**
+ * @brief operator ==
+ * @param compQ
+ * @return
+ */
+template<class T, std::size_t SIZE>
+bool Stack<T, SIZE>::operator==(const Stack& compStack) const  // Comparison operator
+{
+    if(compStack.sz != sz)
+        return false;
+
+    for(size_type elemIdx = 0; elemIdx < idxTop; ++elemIdx)
+        if(reinterpret_cast<const_reference>(compStack.data[elemIdx]) != reinterpret_cast<const_reference>(data[elemIdx]))
+            return false;
+
+    return true;
+}
+
+/**
+ * @brief operator !=
+ * @param compQ
+ * @return
+ */
+template<class T, std::size_t SIZE>
+bool Stack<T, SIZE>::operator!=(const Stack& compStack) const  // Incomparison operator
+{
+    return !(*this == compStack);
+}
+
+/**
+ * @brief operator =
+ * @param sourceQ
+ * @return
+ */
+template<class T, std::size_t SIZE>
+Stack<T, SIZE>& Stack<T, SIZE>::operator=(const Stack& sourceStack)     // Copy assignment operator
+{
+    while(!empty())
+        pop();
+
+    if(!sourceStack.empty())
+    {
+        for(size_type elemIdx = 0; elemIdx < idxTop; ++elemIdx)
+            new(data + elemIdx) value_type(reinterpret_cast<const_reference>(sourceStack.data[elemIdx]));
+
+        idxTop  = sourceStack.idxTop;
+        sz      = sourceStack.sz;
+    }
+
+    return *this;
 }

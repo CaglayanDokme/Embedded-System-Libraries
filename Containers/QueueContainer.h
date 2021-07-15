@@ -91,7 +91,7 @@ private:
     aligned_data data[SIZE];    // Stored data
 
     /*** Helper functions ***/
-    void IncrementIndex(size_type& index) // Increments the index by not violating the range
+    static void IncrementIndex(size_type& index) // Increments any index by not violating the range
     {
         index = (SIZE-1 == index) ? 0 : index+1;
     }
@@ -274,7 +274,7 @@ bool Queue<T, SIZE>::operator==(const Queue& compQ) const
     size_type index0 = idxFront, index1 = compQ.idxFront;
     for(size_type elemIdx = 0; elemIdx < compQ.size(); ++elemIdx)
     {
-        if(compQ.data[index1] != data[index0])
+        if(reinterpret_cast<const_reference>(compQ.data[index1]) != reinterpret_cast<const_reference>(data[index0]))
             return false;
 
         IncrementIndex(index0);
