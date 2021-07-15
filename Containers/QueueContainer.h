@@ -72,10 +72,11 @@ public:
     void swap(Queue& swapQ);
 
     /*** Status Checkers ***/
-    NODISCARD bool      empty()    const { return (0     == sz); }
-    NODISCARD bool      full()     const { return (SIZE  == sz); }
-    NODISCARD size_type size()     const { return sz;            }
-    NODISCARD size_type capacity() const { return SIZE;          }
+    NODISCARD bool      empty()     const { return (0     == sz); } // true if the Queue is empty
+    NODISCARD bool      full()      const { return (SIZE  == sz); } // true if the Queue is full
+    NODISCARD size_type size()      const { return sz;            } // Current size of the Queue
+    NODISCARD size_type capacity()  const { return SIZE;          } // Maximum capacity of the Queue
+    NODISCARD size_type available() const { return (SIZE - sz);   } // Available slots in Queue
 
     /*** Operators ***/
     bool operator==(const Queue& compQ) const;  // Comparison operator
