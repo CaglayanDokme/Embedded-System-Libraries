@@ -68,9 +68,10 @@ public:
     void swap(Queue& swapQ);
 
     /*** Status Checkers ***/
-    NODISCARD bool        empty() const { return (0     == sz); }
-    NODISCARD bool        full()  const { return (SIZE  == sz); }
-    NODISCARD size_type   size()  const { return sz;            }
+    NODISCARD bool      empty()    const { return (0     == sz); }
+    NODISCARD bool      full()     const { return (SIZE  == sz); }
+    NODISCARD size_type size()     const { return sz;            }
+    NODISCARD size_type capacity() const { return SIZE;          }
 
     /*** Operators ***/
     bool operator==(const Queue& compQ) const;  // Comparison operator
