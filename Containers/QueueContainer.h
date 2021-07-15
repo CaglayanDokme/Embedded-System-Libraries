@@ -18,9 +18,10 @@
 #pragma once
 
 /*** Libraries ***/
-#include <cstddef>  // std::size_t
-#include <utility>  // std::move, std::swap
-#include <cstdint>  // std::uint8_t
+#include <cstddef>      // std::size_t
+#include <utility>      // std::move, std::swap
+#include <type_traits>  // std::aligned_storage
+#include <cstdint>      // std::uintXX_t
 
 /*** Special definitions ***/
 // If the C++ version is greater or equal to 2017xx
@@ -42,6 +43,7 @@ public:
     using const_iterator    = const T*;
     using difference_type   = std::ptrdiff_t;
     using size_type         = std::size_t;
+    using aligned_data      = typename std::aligned_storage<sizeof(T), alignof(std::uint32_t)>::type;
 
     /*** Constructors and Destructor ***/
     // Default constructor
@@ -77,10 +79,10 @@ public:
 
 private:
     /*** Members ***/
-    size_type    sz;          // General size
-    size_type    idxFront;    // Index of the front element
-    size_type    idxBack;     // Index of the back element
-    std::uint8_t data[SIZE * sizeof(T)];  // Contained data
+    size_type    sz;            // General size
+    size_type    idxFront;      // Index of the front element
+    size_type    idxBack;       // Index of the back element
+    aligned_data data[SIZE];    // Stored data
 
     /*** Helper functions ***/
     void IncrementIndex(size_type& index) // Increments the index by not violating the range
@@ -104,16 +106,7 @@ template<class T, std::size_t SIZE>
 Queue<T,SIZE>::Queue(const Queue& copyQ)
     : sz(0), idxFront(0), idxBack(SIZE-1)
 {
-    if(copyQ.empty() == false)
-    {
-        // Copy construct each element
-        for(size_type elemIdx = 0; elemIdx < copyQ.sz; ++elemIdx)
-            new(reinterpret_cast<value_type*>(data) + elemIdx) value_type(copyQ.data[(copyQ.idxFront + elemIdx) % SIZE]);
-
-        idxFront    = 0;
-        idxBack     = copyQ.sz - 1;
-        sz          = copyQ.sz;
-    }
+    *this = copyQ;
 }
 
 /**
@@ -123,7 +116,7 @@ Queue<T,SIZE>::Queue(const Queue& copyQ)
 template<class T, std::size_t SIZE>
 const T& Queue<T, SIZE>::front() const
 {
-    return reinterpret_cast<value_type*>(data)[idxFront];
+    return reinterpret_cast<const_reference>(data[idxFront]);
 }
 
 /**
@@ -133,7 +126,7 @@ const T& Queue<T, SIZE>::front() const
 template<class T, std::size_t SIZE>
 T& Queue<T, SIZE>::front()
 {
-    return reinterpret_cast<value_type*>(data)[idxFront];
+    return reinterpret_cast<reference>(data[idxFront]);
 }
 
 /**
@@ -143,7 +136,7 @@ T& Queue<T, SIZE>::front()
 template<class T, std::size_t SIZE>
 const T& Queue<T, SIZE>::back() const
 {
-    return reinterpret_cast<value_type*>(data)[idxFront];
+    return reinterpret_cast<const_reference>(data[idxBack]);
 }
 
 /**
@@ -153,7 +146,7 @@ const T& Queue<T, SIZE>::back() const
 template<class T, std::size_t SIZE>
 T& Queue<T, SIZE>::back()
 {
-    return reinterpret_cast<value_type*>(data)[idxFront];
+    return reinterpret_cast<reference>(data[idxBack]);
 }
 
 /**
@@ -173,7 +166,7 @@ bool Queue<T, SIZE>::emplace(Args&&... args)
     IncrementIndex(idxBack);
 
     // In-place construct element with the arguments at the back
-    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(std::forward<Args>(args)...);
+    new(data + idxBack) value_type(std::forward<Args>(args)...);
 
     // Adjust front index
     if(full())  // Queue may be full, overwrite the oldest element
@@ -201,7 +194,7 @@ bool Queue<T, SIZE>::push(const value_type& value)
     IncrementIndex(idxBack);
 
     // Copy construct element at the back
-    new(reinterpret_cast<value_type*>(data) + idxBack) value_type(value);
+    new(data + idxBack) value_type(value);
 
     // Adjust front index
     if(full())  // Queue may be full, overwrite the oldest element
@@ -232,10 +225,10 @@ bool Queue<T, SIZE>::push(value_type&& value)
 template<class T, std::size_t SIZE>
 void Queue<T, SIZE>::pop()
 {
-    if(empty() == false)
+    if(!empty())
     {
         // Explicitly call the destructor as we used the placement new
-        reinterpret_cast<value_type*>(data)[idxFront].~value_type();
+        reinterpret_cast<value_type*>(data + idxFront)->~value_type();
 
         IncrementIndex(idxFront);
 
@@ -251,7 +244,7 @@ void Queue<T, SIZE>::pop()
 template<class T, std::size_t SIZE>
 void Queue<T, SIZE>::swap(Queue& swapQ)
 {
-    if(swapQ.empty() == false)
+    if(!swapQ.empty())
     {
         std::swap(data,     swapQ.data);
         std::swap(idxBack,  swapQ.idxBack);
@@ -309,12 +302,12 @@ Queue<T, SIZE>& Queue<T, SIZE>::operator=(const Queue& sourceQ)
     while(!empty())
         pop();
 
-    if(sourceQ.empty() == false)
+    if(!sourceQ.empty())
     {
         // Copy construct each element
         size_type sourceIdx = sourceQ.idxFront;
         for(size_type elemIdx = 0; elemIdx < sourceQ.sz; ++elemIdx, IncrementIndex(sourceIdx))
-            new(reinterpret_cast<value_type*>(data) + elemIdx) value_type(sourceQ.data[sourceIdx]);
+            new(data + elemIdx) value_type(reinterpret_cast<const_reference>(sourceQ.data[sourceIdx]));
 
         idxFront    = 0;
         idxBack     = sourceQ.sz - 1;
