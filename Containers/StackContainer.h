@@ -29,6 +29,8 @@
 /*** Container Class ***/
 template<class T, std::size_t SIZE>
 class Stack{
+    static_assert(SIZE != 0, "Stack capacity cannot be zero!");
+
 public:
     /*** C++ Standard Named Requirements for Containers ***/
     using value_type        = T;
@@ -59,9 +61,10 @@ public:
     void swap(Stack& swapStack);
 
     /*** Status Checkers ***/
-    NODISCARD bool        empty() const { return (0     == sz); }
-    NODISCARD bool        full()  const { return (SIZE  == sz); }
-    NODISCARD size_type   size()  const { return sz;            }
+    NODISCARD bool      empty()    const { return (0     == sz); }
+    NODISCARD bool      full()     const { return (SIZE  == sz); }
+    NODISCARD size_type size()     const { return sz;            }
+    NODISCARD size_type capacity() const { return SIZE;          }
 
 private:
     /*** Members ***/

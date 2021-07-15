@@ -9,7 +9,9 @@
  *                                 data types without default constructor.
  *                              -> Default size parameter removed from template arguments
  *              July 11, 2021   -> Index incrementor method optimized, mod operation removed
- * .
+ *              July 15, 2021   -> Data storage replaced with std::aligned_storage
+ *                                 capacity() method added.
+ *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
  */
@@ -34,6 +36,8 @@
 /*** Container Class ***/
 template<class T, std::size_t SIZE>
 class Queue{
+    static_assert(SIZE != 0, "Queue capacity cannot be zero!");
+
 public:
     /*** C++ Standard Named Requirements for Containers ***/
     using value_type        = T;
