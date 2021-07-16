@@ -8,6 +8,7 @@
  *                               data types without default constructor.
  *              July 15, 2021 -> Data storage replaced with std::aligned_storage
  *                               capacity() method added.
+ *              July 16, 2021 -> Member variable sz removed as it is easily derivable from idxTop
  *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
@@ -70,14 +71,13 @@ public:
     Stack& operator=(const Stack& sourceQ);     // Copy assignment operator
 
     /*** Status Checkers ***/
-    NODISCARD bool      empty()    const { return (0     == sz); }
-    NODISCARD bool      full()     const { return (SIZE  == sz); }
-    NODISCARD size_type size()     const { return sz;            }
-    NODISCARD size_type capacity() const { return SIZE;          }
+    NODISCARD bool      empty()    const { return (0     == idxTop); }
+    NODISCARD bool      full()     const { return (SIZE  == idxTop); }
+    NODISCARD size_type size()     const { return idxTop;            }
+    NODISCARD size_type capacity() const { return SIZE;              }
 
 private:
     /*** Members ***/
-    size_type    sz;          // General size
     size_type    idxTop;      // Index after the top element
     aligned_data data[SIZE];  // Contained data
 };
@@ -87,7 +87,7 @@ private:
  */
 template<class T, std::size_t SIZE>
 Stack<T, SIZE>::Stack()
-    : sz(0), idxTop(0)
+    : idxTop(0)
 { /* No operation */ }
 
 /**
@@ -96,7 +96,7 @@ Stack<T, SIZE>::Stack()
  */
 template<class T, std::size_t SIZE>
 Stack<T, SIZE>::Stack(const Stack& copyStack)
-    : sz(0), idxTop(0)
+    : idxTop(0)
 {
     *this = copyStack;
 }
@@ -144,7 +144,6 @@ bool Stack<T, SIZE>::push(const value_type& value)
     new(data + idxTop) value_type(value);
 
     ++idxTop;
-    ++sz;
 
     return true;
 }
@@ -175,7 +174,6 @@ bool Stack<T, SIZE>::emplace(Args&&... args)
     new(data + idxTop) value_type(std::forward<Args>(args)...);
 
     ++idxTop;
-    ++sz;
 
     return true;
 }
@@ -193,7 +191,6 @@ void Stack<T, SIZE>::pop()
     reinterpret_cast<reference>(data[idxTop-1]).~value_type();
 
     --idxTop;
-    --sz;
 }
 
 /**
@@ -203,7 +200,6 @@ void Stack<T, SIZE>::pop()
 template<class T, std::size_t SIZE>
 void Stack<T, SIZE>::swap(Stack& swapStack)
 {
-    std::swap(sz,       swapStack.sz);
     std::swap(idxTop,   swapStack.idxTop);
     std::swap(data,     swapStack.data);
 }
@@ -216,7 +212,7 @@ void Stack<T, SIZE>::swap(Stack& swapStack)
 template<class T, std::size_t SIZE>
 bool Stack<T, SIZE>::operator==(const Stack& compStack) const
 {
-    if(compStack.sz != sz)
+    if(compStack.size() != size())
         return false;
 
     for(size_type elemIdx = 0; elemIdx < idxTop; ++elemIdx)
@@ -250,11 +246,10 @@ Stack<T, SIZE>& Stack<T, SIZE>::operator=(const Stack& sourceStack)
 
     if(!sourceStack.empty())
     {
-        for(size_type elemIdx = 0; elemIdx < idxTop; ++elemIdx)
+        for(size_type elemIdx = 0; elemIdx < sourceStack.idxTop; ++elemIdx)
             new(data + elemIdx) value_type(reinterpret_cast<const_reference>(sourceStack.data[elemIdx]));
 
         idxTop  = sourceStack.idxTop;
-        sz      = sourceStack.sz;
     }
 
     return *this;
