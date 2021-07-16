@@ -7,8 +7,9 @@
  *              July 11, 2021 -> Data buffer replaced with uint8_t array to support
  *                               data types without default constructor.
  *              July 15, 2021 -> Data storage replaced with std::aligned_storage
- *                               capacity() method added.
+ *                            -> capacity() method added.
  *              July 16, 2021 -> Member variable sz removed as it is easily derivable from idxTop
+ *                            -> Missing destructor added.
  *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
@@ -53,6 +54,9 @@ public:
     // Copy constructor
     Stack(const Stack& copyStack);
 
+    // Destructor
+    ~Stack();
+
     /*** Element Access ***/
     NODISCARD const_reference top() const;
     NODISCARD reference       top();
@@ -66,9 +70,9 @@ public:
     void swap(Stack& swapStack);
 
     /*** Operators ***/
-    bool operator==(const Stack& compQ) const;  // Comparison operator
-    bool operator!=(const Stack& compQ) const;  // Incomparison operator
-    Stack& operator=(const Stack& sourceQ);     // Copy assignment operator
+    bool operator==(const Stack& compStack) const;
+    bool operator!=(const Stack& compStack) const;
+    Stack& operator=(const Stack& sourceStack);
 
     /*** Status Checkers ***/
     NODISCARD bool      empty()    const { return (0     == idxTop); }
@@ -99,6 +103,16 @@ Stack<T, SIZE>::Stack(const Stack& copyStack)
     : idxTop(0)
 {
     *this = copyStack;
+}
+
+/**
+ * @brief Destructor
+ */
+template<class T, std::size_t SIZE>
+Stack<T, SIZE>::~Stack()
+{
+    while(!empty())
+        pop();
 }
 
 /**
