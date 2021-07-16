@@ -68,9 +68,9 @@ public:
 
     /*** Modifiers ***/
     template <class... Args>
-    NODISCARD bool emplace(Args&&... args);
-    NODISCARD bool push(const value_type& value);
-    NODISCARD bool push(value_type&& value);
+    bool emplace(Args&&... args);
+    bool push(const value_type& value);
+    bool push(value_type&& value);
 
     void pop();
     void swap(Queue& swapQ);
@@ -83,9 +83,9 @@ public:
     NODISCARD size_type available() const { return (SIZE - sz);   } // Available slots in Queue
 
     /*** Operators ***/
-    bool operator==(const Queue& compQ) const;  // Comparison operator
-    bool operator!=(const Queue& compQ) const;  // Incomparison operator
-    Queue& operator=(const Queue& sourceQ);     // Copy assignment operator
+    bool operator==(const Queue& compQ) const;
+    bool operator!=(const Queue& compQ) const;
+    Queue& operator=(const Queue& sourceQ);
 
 private:
     /*** Members ***/
