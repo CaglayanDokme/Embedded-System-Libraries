@@ -11,6 +11,7 @@
  *              July 11, 2021   -> Index incrementor method optimized, mod operation removed
  *              July 15, 2021   -> Data storage replaced with std::aligned_storage
  *                                 capacity() method added.
+ *              July 16, 2021   -> Missing destructor implemented.
  *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
@@ -55,6 +56,9 @@ public:
 
     // Copy Constructor
     Queue(const Queue& copyQ);
+
+    // Destructor
+    ~Queue();
 
     /*** Element Access ***/
     NODISCARD const_reference front() const;
@@ -113,6 +117,17 @@ Queue<T,SIZE>::Queue(const Queue& copyQ)
     : sz(0), idxFront(0), idxBack(SIZE-1)
 {
     *this = copyQ;
+}
+
+/**
+ * @brief   Destructor
+ * @note    Calls the destructor of each element explicitly
+ */
+template<class T, std::size_t SIZE>
+Queue<T,SIZE>::~Queue()
+{
+    while(!empty())
+        pop();
 }
 
 /**
@@ -226,7 +241,7 @@ bool Queue<T, SIZE>::push(value_type&& value)
 
 /**
  * @brief   Pops the front element of the Queue
- * @note    Explicitly calls the destructor of the element
+ * @note    Explicitly calls the destructor of the popped element
  */
 template<class T, std::size_t SIZE>
 void Queue<T, SIZE>::pop()
@@ -298,7 +313,7 @@ bool Queue<T, SIZE>::operator!=(const Queue& compQ) const
 
 /**
  * @brief   Copy assignment operator
- * @param   sourceQ     Queue to bed copied from
+ * @param   sourceQ     Queue to be copied from
  * @return  lValue reference to the left Queue to support cascaded operations
  */
 template<class T, std::size_t SIZE>
