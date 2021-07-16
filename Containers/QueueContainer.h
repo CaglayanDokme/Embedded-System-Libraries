@@ -265,13 +265,10 @@ void Queue<T, SIZE>::pop()
 template<class T, std::size_t SIZE>
 void Queue<T, SIZE>::swap(Queue& swapQ)
 {
-    if(!swapQ.empty())
-    {
-        std::swap(data,     swapQ.data);
-        std::swap(idxBack,  swapQ.idxBack);
-        std::swap(idxFront, swapQ.idxFront);
-        std::swap(sz,       swapQ.sz);
-    }
+    std::swap(data,     swapQ.data);
+    std::swap(idxBack,  swapQ.idxBack);
+    std::swap(idxFront, swapQ.idxFront);
+    std::swap(sz,       swapQ.sz);
 }
 
 /**
