@@ -1,7 +1,7 @@
 /**
  * @file        StackContainer.h
  * @details     A template stack container class for embedded systems.
- *              The contatiner is implemented without any dynamic allocation feature.
+ *              The container is implemented without any dynamic allocation feature.
  * @author      Caglayan DOKME, caglayandokme@gmail.com
  * @date        July 10, 2021 -> First release
  *              July 11, 2021 -> Data buffer replaced with uint8_t array to support
@@ -10,6 +10,8 @@
  *                            -> capacity() method added.
  *              July 16, 2021 -> Member variable sz removed as it is easily derivable from idxTop
  *                            -> Missing destructor added.
+ *                            -> lvalue ref-qualifier added to assignment operator.
+ *                            -> Helper function at(..) added to avoid repetition of casting.
  *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
@@ -41,15 +43,13 @@ public:
     using value_type        = T;
     using reference         = T&;
     using const_reference   = const T&;
-    using iterator          = T*;
-    using const_iterator    = const T*;
     using difference_type   = std::ptrdiff_t;
     using size_type         = std::size_t;
     using aligned_data      = typename std::aligned_storage<sizeof(T), alignof(T)>::type;
 
     /*** Constructors and Destructor ***/
     // Default constructor
-    Stack();
+    Stack() = default;
 
     // Copy constructor
     Stack(const Stack& copyStack);
@@ -72,7 +72,7 @@ public:
     /*** Operators ***/
     bool operator==(const Stack& compStack) const;
     bool operator!=(const Stack& compStack) const;
-    Stack& operator=(const Stack& sourceStack);
+    Stack& operator=(const Stack& sourceStack) &;
 
     /*** Status Checkers ***/
     NODISCARD bool      empty()    const { return (0     == idxTop); }
@@ -82,17 +82,20 @@ public:
 
 private:
     /*** Members ***/
-    size_type    idxTop;      // Index after the top element
-    aligned_data data[SIZE];  // Contained data
-};
+    size_type    idxTop{0};     // Index after the top element
+    aligned_data data[SIZE];    // Contained data
 
-/**
- * @brief Default constructor
- */
-template<class T, std::size_t SIZE>
-Stack<T, SIZE>::Stack()
-    : idxTop(0)
-{ /* No operation */ }
+    /*** Helper Functions ***/
+    const_reference at(const size_type elemIdx) const
+    {
+        return reinterpret_cast<const_reference>(data[elemIdx]);
+    }
+
+    reference at(const size_type elemIdx)
+    {
+        return reinterpret_cast<reference>(data[elemIdx]);
+    }
+};
 
 /**
  * @brief Copy constructor
@@ -100,7 +103,6 @@ Stack<T, SIZE>::Stack()
  */
 template<class T, std::size_t SIZE>
 Stack<T, SIZE>::Stack(const Stack& copyStack)
-    : idxTop(0)
 {
     *this = copyStack;
 }
@@ -124,9 +126,9 @@ template<class T, std::size_t SIZE>
 const T& Stack<T, SIZE>::top() const
 {
     if(empty())
-        return reinterpret_cast<const_reference>(data[0]);
+        return at(0);
 
-    return reinterpret_cast<const_reference>(data[idxTop-1]);
+    return at(idxTop-1);
 }
 
 /**
@@ -138,9 +140,9 @@ template<class T, std::size_t SIZE>
 T& Stack<T, SIZE>::top()
 {
     if(empty())
-        return reinterpret_cast<reference>(data[0]);
+        return at(0);
 
-    return reinterpret_cast<reference>(data[idxTop-1]);
+    return at(idxTop-1);
 }
 
 /**
@@ -175,7 +177,7 @@ bool Stack<T, SIZE>::push(value_type&& value)
 
 /**
  * @brief   Pushes the given element to the top of the Stack by constructing it in-place
- * @param   value   Arguments for constructing the new element
+ * @param   args    Arguments for constructing the new element
  * @return  true    If the element is pushed successfully
  */
 template<class T, std::size_t SIZE>
@@ -202,7 +204,7 @@ void Stack<T, SIZE>::pop()
         return;
 
     // Explicitly call the destructor as we used the placement new
-    reinterpret_cast<reference>(data[idxTop-1]).~value_type();
+    at(idxTop-1).~value_type();
 
     --idxTop;
 }
@@ -220,8 +222,8 @@ void Stack<T, SIZE>::swap(Stack& swapStack)
 
 /**
  * @brief   Comparison operator
- * @param   compQ   Stack to be compared with.
- * @return  true    If both Stacks are equal.
+ * @param   compStack   Stack to be compared with.
+ * @return  true        If both Stacks are equal.
  */
 template<class T, std::size_t SIZE>
 bool Stack<T, SIZE>::operator==(const Stack& compStack) const
@@ -230,7 +232,7 @@ bool Stack<T, SIZE>::operator==(const Stack& compStack) const
         return false;
 
     for(size_type elemIdx = 0; elemIdx < idxTop; ++elemIdx)
-        if(reinterpret_cast<const_reference>(compStack.data[elemIdx]) != reinterpret_cast<const_reference>(data[elemIdx]))
+        if(compStack.at(elemIdx) != at(elemIdx))
             return false;
 
     return true;
@@ -238,8 +240,8 @@ bool Stack<T, SIZE>::operator==(const Stack& compStack) const
 
 /**
  * @brief   Incomparison operator
- * @param   compQ   Stack to be compared with.
- * @return  true    If Stacks are not equal.
+ * @param   compStack   Stack to be compared with.
+ * @return  true        If Stacks are not equal.
  */
 template<class T, std::size_t SIZE>
 bool Stack<T, SIZE>::operator!=(const Stack& compStack) const
@@ -253,7 +255,7 @@ bool Stack<T, SIZE>::operator!=(const Stack& compStack) const
  * @return  lValue reference to the left Stack to support cascaded operations
  */
 template<class T, std::size_t SIZE>
-Stack<T, SIZE>& Stack<T, SIZE>::operator=(const Stack& sourceStack)
+Stack<T, SIZE>& Stack<T, SIZE>::operator=(const Stack& sourceStack) &
 {
     while(!empty())
         pop();
@@ -261,7 +263,7 @@ Stack<T, SIZE>& Stack<T, SIZE>::operator=(const Stack& sourceStack)
     if(!sourceStack.empty())
     {
         for(size_type elemIdx = 0; elemIdx < sourceStack.idxTop; ++elemIdx)
-            new(data + elemIdx) value_type(reinterpret_cast<const_reference>(sourceStack.data[elemIdx]));
+            new(data + elemIdx) value_type(sourceStack.at(elemIdx));
 
         idxTop  = sourceStack.idxTop;
     }
