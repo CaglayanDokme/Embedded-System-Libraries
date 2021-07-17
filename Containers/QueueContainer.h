@@ -1,7 +1,7 @@
 /**
  * @file        QueueContainer.h
  * @details     A template queue container class for embedded systems.
- *              The contatiner is implemented without any dynamic allocation feature.
+ *              The container is implemented without any dynamic allocation feature.
  * @author      Caglayan DOKME, caglayandokme@gmail.com
  * @date        July 9, 2021    -> First release
  *              July 10, 2021   -> Doxygen added. Copy constructor added.
@@ -12,6 +12,8 @@
  *              July 15, 2021   -> Data storage replaced with std::aligned_storage
  *                                 capacity() method added.
  *              July 16, 2021   -> Missing destructor implemented.
+ *              July 17, 2021   -> lvalue ref-qualifier added to assignment operator.
+ *                              -> Helper function at(..) added to avoid repetition of casting.
  *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
@@ -24,7 +26,6 @@
 #include <cstddef>      // std::size_t
 #include <utility>      // std::move, std::swap
 #include <type_traits>  // std::aligned_storage
-#include <cstdint>      // std::uintXX_t
 
 /*** Special definitions ***/
 // If the C++ version is greater or equal to 2017xx
@@ -85,7 +86,7 @@ public:
     /*** Operators ***/
     bool operator==(const Queue& compQ) const;
     bool operator!=(const Queue& compQ) const;
-    Queue& operator=(const Queue& sourceQ);
+    Queue& operator=(const Queue& sourceQ) &;
 
 private:
     /*** Members ***/
@@ -98,6 +99,16 @@ private:
     static void IncrementIndex(size_type& index) // Increments any index by not violating the range
     {
         index = (SIZE-1 == index) ? 0 : index+1;
+    }
+
+    NODISCARD const_reference at(const size_type elemIdx) const
+    {
+        return reinterpret_cast<const_reference>(data[elemIdx]);
+    }
+
+    NODISCARD reference at(const size_type elemIdx)
+    {
+        return reinterpret_cast<reference>(data[elemIdx]);
     }
 };
 
@@ -137,7 +148,7 @@ Queue<T,SIZE>::~Queue()
 template<class T, std::size_t SIZE>
 const T& Queue<T, SIZE>::front() const
 {
-    return reinterpret_cast<const_reference>(data[idxFront]);
+    return at(idxFront);
 }
 
 /**
@@ -147,7 +158,7 @@ const T& Queue<T, SIZE>::front() const
 template<class T, std::size_t SIZE>
 T& Queue<T, SIZE>::front()
 {
-    return reinterpret_cast<reference>(data[idxFront]);
+    return at(idxFront);
 }
 
 /**
@@ -157,7 +168,7 @@ T& Queue<T, SIZE>::front()
 template<class T, std::size_t SIZE>
 const T& Queue<T, SIZE>::back() const
 {
-    return reinterpret_cast<const_reference>(data[idxBack]);
+    return at(idxBack);
 }
 
 /**
@@ -167,12 +178,12 @@ const T& Queue<T, SIZE>::back() const
 template<class T, std::size_t SIZE>
 T& Queue<T, SIZE>::back()
 {
-    return reinterpret_cast<reference>(data[idxBack]);
+    return at(idxBack);
 }
 
 /**
  * @brief   Pushes the element by constructing it in-place with the given arguments
- * @param   args  Arguments to be forwarded to the constructor of the new element
+ * @param   args    Arguments to be forwarded to the constructor of the new element
  * @return  true    If the operation is successful.
  *          false   If the queue was full
  */
@@ -249,7 +260,7 @@ void Queue<T, SIZE>::pop()
     if(!empty())
     {
         // Explicitly call the destructor as we used the placement new
-        reinterpret_cast<value_type*>(data + idxFront)->~value_type();
+        at(idxFront).~value_type();
 
         IncrementIndex(idxFront);
 
@@ -286,7 +297,7 @@ bool Queue<T, SIZE>::operator==(const Queue& compQ) const
     size_type index0 = idxFront, index1 = compQ.idxFront;
     for(size_type elemIdx = 0; elemIdx < compQ.size(); ++elemIdx)
     {
-        if(reinterpret_cast<const_reference>(compQ.data[index1]) != reinterpret_cast<const_reference>(data[index0]))
+        if(compQ.at(index1) != at(index0))
             return false;
 
         IncrementIndex(index0);
@@ -314,7 +325,7 @@ bool Queue<T, SIZE>::operator!=(const Queue& compQ) const
  * @return  lValue reference to the left Queue to support cascaded operations
  */
 template<class T, std::size_t SIZE>
-Queue<T, SIZE>& Queue<T, SIZE>::operator=(const Queue& sourceQ)
+Queue<T, SIZE>& Queue<T, SIZE>::operator=(const Queue& sourceQ) &
 {
     // Pop all elements first
     while(!empty())
@@ -325,7 +336,7 @@ Queue<T, SIZE>& Queue<T, SIZE>::operator=(const Queue& sourceQ)
         // Copy construct each element
         size_type sourceIdx = sourceQ.idxFront;
         for(size_type elemIdx = 0; elemIdx < sourceQ.sz; ++elemIdx, IncrementIndex(sourceIdx))
-            new(data + elemIdx) value_type(reinterpret_cast<const_reference>(sourceQ.data[sourceIdx]));
+            new(data + elemIdx) value_type(sourceQ.at(sourceIdx));
 
         idxFront    = 0;
         idxBack     = sourceQ.sz - 1;
