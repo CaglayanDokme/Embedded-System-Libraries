@@ -234,6 +234,7 @@ void Stack<T, SIZE>::swap(Stack& swapStack)
     {
         for( ; swapIdx < idxTop; ++swapIdx)
         {
+            // Construct element at new Stack
             new(swapStack.data + swapIdx) value_type(at(swapIdx));
 
             // Remove element from previous Stack
@@ -244,8 +245,10 @@ void Stack<T, SIZE>::swap(Stack& swapStack)
     {
         for( ; swapIdx < swapStack.idxTop; ++swapIdx)
         {
+            // Construct element at new Stack
             new(data + swapIdx) value_type(swapStack.at(swapIdx));
 
+            // Remove element from previous Stack
             swapStack.at(swapIdx).~value_type();
         }
     }

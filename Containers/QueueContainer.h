@@ -14,6 +14,7 @@
  *              July 16, 2021   -> Missing destructor implemented.
  *              July 17, 2021   -> lvalue ref-qualifier added to assignment operator.
  *                              -> Helper function at(..) added to avoid repetition of casting.
+ *                              -> Swap issue fixed with manual swapping of the storage.
  *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
@@ -276,7 +277,48 @@ void Queue<T, SIZE>::pop()
 template<class T, std::size_t SIZE>
 void Queue<T, SIZE>::swap(Queue& swapQ)
 {
-    std::swap(data,     swapQ.data);
+    size_type swapIdx0 = idxFront, swapIdx1 = swapQ.idxFront, swapCount = 0;
+
+    // Swap the matching elements
+    for( ; (swapCount < sz) && (swapCount < swapQ.sz); ++swapCount)
+    {
+        std::swap(at(swapIdx0), swapQ.at(swapIdx1));
+
+        IncrementIndex(swapIdx0);
+        IncrementIndex(swapIdx1);
+    }
+
+    // Move the elements without any swappable match
+    if(sz > swapQ.sz)
+    {
+        for( ; swapCount < sz; ++swapCount)
+        {
+            // Construct element at new Queue
+            new(swapQ.data + swapIdx1) value_type(at(swapIdx0));
+
+            // Remove element from previous Queue
+            at(swapIdx0).~value_type();
+
+            IncrementIndex(swapIdx0);
+            IncrementIndex(swapIdx1);
+        }
+    }
+    else if(sz < swapQ.sz)
+    {
+        for( ; swapCount < swapQ.sz; ++swapCount)
+        {
+            // Construct element at new Queue
+            new(data + swapIdx0) value_type(swapQ.at(swapIdx1));
+
+            // Remove element from previous Queue
+            at(swapIdx1).~value_type();
+
+            IncrementIndex(swapIdx0);
+            IncrementIndex(swapIdx1);
+        }
+    }
+
+    // Swap indexes
     std::swap(idxBack,  swapQ.idxBack);
     std::swap(idxFront, swapQ.idxFront);
     std::swap(sz,       swapQ.sz);
