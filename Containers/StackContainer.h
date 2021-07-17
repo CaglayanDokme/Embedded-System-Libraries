@@ -23,7 +23,6 @@
 /*** Libraries ***/
 #include <cstddef>  // std::size_t
 #include <utility>  // std::move, std::swap
-#include <cstdint>  // std::uint8_t
 
 /*** Special definitions ***/
 // If the C++ version is greater or equal to 2017xx
@@ -75,10 +74,11 @@ public:
     Stack& operator=(const Stack& sourceStack) &;
 
     /*** Status Checkers ***/
-    NODISCARD bool      empty()    const { return (0     == idxTop); }
-    NODISCARD bool      full()     const { return (SIZE  == idxTop); }
-    NODISCARD size_type size()     const { return idxTop;            }
-    NODISCARD size_type capacity() const { return SIZE;              }
+    NODISCARD bool      empty()     const { return (0     == idxTop); } // true if the Stack is empty
+    NODISCARD bool      full()      const { return (SIZE  == idxTop); } // true if the Stack is full
+    NODISCARD size_type size()      const { return idxTop;            } // Current size of the Stack
+    NODISCARD size_type capacity()  const { return SIZE;              } // Maximum capacity of the Stack
+    NODISCARD size_type available() const { return (SIZE - size());   } // Available slots in Stack
 
 private:
     /*** Members ***/
@@ -86,12 +86,12 @@ private:
     aligned_data data[SIZE];    // Contained data
 
     /*** Helper Functions ***/
-    const_reference at(const size_type elemIdx) const
+    NODISCARD const_reference at(const size_type elemIdx) const
     {
         return reinterpret_cast<const_reference>(data[elemIdx]);
     }
 
-    reference at(const size_type elemIdx)
+    NODISCARD reference at(const size_type elemIdx)
     {
         return reinterpret_cast<reference>(data[elemIdx]);
     }
