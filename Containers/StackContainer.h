@@ -12,6 +12,7 @@
  *                            -> Missing destructor added.
  *                            -> lvalue ref-qualifier added to assignment operator.
  *                            -> Helper function at(..) added to avoid repetition of casting.
+ *              July 17, 2021 -> Swap issue fixed with manual swapping of the storage.
  *
  * @note        Feel free to contact for questions, bugs or any other thing.
  * @copyright   No copyright.
@@ -216,8 +217,45 @@ void Stack<T, SIZE>::pop()
 template<class T, std::size_t SIZE>
 void Stack<T, SIZE>::swap(Stack& swapStack)
 {
-    std::swap(idxTop,   swapStack.idxTop);
-    std::swap(data,     swapStack.data);
+    size_type swapIdx = 0;  // Number of swapped elements
+
+    // Swap elements unless exceeding any of the top indexes
+    for( ; (swapIdx < swapStack.idxTop) && (swapIdx < idxTop); ++swapIdx)
+    {
+        std::swap(swapStack.at(swapIdx), at(swapIdx));
+    }
+
+    /* Remaining elements should be constructed manually as they have
+     * no swappable element at the other stack.
+     * The moved object should be destructed at its old place. */
+
+    // Determine which Stack was bigger
+    if(idxTop > swapStack.idxTop)
+    {
+        for( ; swapIdx < idxTop; ++swapIdx)
+        {
+            new(swapStack.data + swapIdx) value_type(at(swapIdx));
+
+            // Remove element from previous Stack
+            at(swapIdx).~value_type();
+        }
+    }
+    else if(idxTop < swapStack.idxTop)
+    {
+        for( ; swapIdx < swapStack.idxTop; ++swapIdx)
+        {
+            new(data + swapIdx) value_type(swapStack.at(swapIdx));
+
+            swapStack.at(swapIdx).~value_type();
+        }
+    }
+    else
+    {
+        // Do nothing
+    }
+
+    // Swap indexes
+    std::swap(idxTop, swapStack.idxTop);
 }
 
 /**
