@@ -27,6 +27,7 @@
 #include <cstddef>      // std::size_t
 #include <utility>      // std::move, std::swap
 #include <type_traits>  // std::aligned_storage
+#include <new>          // operator new
 
 /*** Special definitions ***/
 // If the C++ version is greater or equal to 2017xx
@@ -201,12 +202,7 @@ bool Queue<T, SIZE>::emplace(Args&&... args)
     // In-place construct element with the arguments at the back
     new(data + idxBack) value_type(std::forward<Args>(args)...);
 
-    // Adjust front index
-    if(full())  // Queue may be full, overwrite the oldest element
-        IncrementIndex(idxFront);
-
-    // Adjust size
-    sz += full() ? 0 : 1;
+    ++sz;   // Increment size
 
     return true;
 }
@@ -229,12 +225,7 @@ bool Queue<T, SIZE>::push(const value_type& value)
     // Copy construct element at the back
     new(data + idxBack) value_type(value);
 
-    // Adjust front index
-    if(full())  // Queue may be full, overwrite the oldest element
-        IncrementIndex(idxFront);
-
-    // Adjust size
-    sz += full() ? 0 : 1;
+    ++sz;   // Increment size
 
     return true;
 }
